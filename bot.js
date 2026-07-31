@@ -131,7 +131,17 @@ export async function runBot(messages, { channel = 'web' } = {}) {
 // Si el primer mensaje es solo un saludo, los tres mensajes de apertura ya lo
 // contestan todo y no hace falta molestar al modelo. Si trae información (edad,
 // zona, una pregunta), mandamos la apertura y dejamos que el modelo siga desde ahí.
-const SALUDO_RE = /^[\s\p{P}]*(hola+|buenas|buen d[ií]a|buenas tardes|buenas noches|hey|holis|qu[eé] tal|hi)[\s\p{P}]*$/iu;
+// Acepta el saludo pelado y también el saludo con cortesía ("hola, cómo estás?"),
+// que es como escribe casi todo el mundo. Si no lo contempláramos, el modelo
+// contestaría "todo bien por acá" y volvería a preguntar la zona que la apertura
+// ya preguntó.
+const SALUDO = '(hola+|holis|buenas|buen d[ií]a|buenas tardes|buenas noches|hey|hi|qu[eé] tal|qu[eé] onda)';
+const CORTESIA = '(c[oó]mo (est[aá]s|est[aá]n|and[aá]s|andan|va|les va|and[aá]n)|todo bien|todo ok)';
+const SEPARADOR = '[\\s\\p{P}\\p{S}]';
+const SALUDO_RE = new RegExp(
+  `^${SEPARADOR}*${SALUDO}(${SEPARADOR}+(${SALUDO}|${CORTESIA}))*${SEPARADOR}*$`,
+  'iu',
+);
 
 export function esSoloSaludo(texto) {
   return SALUDO_RE.test((texto || '').trim());

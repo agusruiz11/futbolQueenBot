@@ -7,22 +7,23 @@
     "D": "Mayores de 18 — derivación",
     "E": "Matrícula y clase de prueba",
     "F": "Combinaciones entre sedes y descuentos",
-    "G": "Anti-alucinación y fuera de scope",
+    "G": "Anti-alucinación, fuera de scope y datos operativos",
     "H": "Formato y tono",
     "I": "Multi-turno y cambios de intención",
-    "J": "Sala de 4 como piso y derivación al WhatsApp"
+    "J": "Sala de 4 como piso y derivación al WhatsApp",
+    "K": "Ubicación: qué sede según el barrio"
   },
   "casos": [
     {
       "id": "A1",
       "categoria": "A",
-      "descripcion": "Saludo pelado — solo deben salir los 3 mensajes de apertura",
+      "descripcion": "Saludo pelado — solo deben salir los 2 mensajes de apertura",
       "turnos": ["hola"],
       "criterios": [
-        "Salen exactamente los 3 mensajes de apertura del guion, en orden",
+        "Salen exactamente los 2 mensajes de apertura, en orden",
         "El primero incluye el emoji 💜 y menciona el rango 4 a 17 años",
-        "El segundo nombra las cuatro sedes: Villa Crespo, Colegiales, Núñez y Caballito",
-        "El tercero pregunta de dónde son, sin signo de apertura",
+        "El segundo pregunta de dónde son, sin signo de apertura",
+        "NO lista las cuatro sedes: eso se dice después, según el barrio que contesten",
         "No se agrega ningún mensaje extra"
       ]
     },
@@ -176,12 +177,13 @@
     {
       "id": "C5",
       "categoria": "C",
-      "descripcion": "Villa Crespo con grupos superpuestos — 8 años entra en dos grupos",
+      "descripcion": "Villa Crespo con grupos superpuestos — 8 años, se cobra el precio más alto",
       "turnos": ["hola", "Villa Crespo, 8 años"],
       "criterios": [
-        "Reconoce que a esa edad puede entrar en más de un grupo (2do a 4to grado y 3er grado a 1er año)",
-        "Muestra las opciones con sus precios, o aclara que la escuela confirma el grupo definitivo",
-        "No inventa un precio que no esté en la tabla"
+        "Ofrece los días de los dos grupos juntos (2do a 4to grado y 3er grado a 1er año) como opciones de día",
+        "Pasa UN SOLO precio: $85.000 efectivo / $93.000 transferencia",
+        "NO menciona los $82.000, que es el precio del grupo más chico",
+        "No lo presenta como dos grupos distintos con precios distintos"
       ]
     },
     {
@@ -223,19 +225,30 @@
       "descripcion": "Pregunta por la clase de prueba",
       "turnos": ["hola", "Villa Crespo, 9 años", "hay clase de prueba?"],
       "criterios": [
-        "Dice que la clase de prueba no se cobra en el momento",
-        "Aclara que si la nena sigue, se abona el mes completo incluyendo esa clase, más la matrícula",
-        "Aclara que si no se adapta, no se paga nada",
-        "NO dice solamente 'es gratis' sin la aclaración"
+        "Dice que la clase de prueba es sin costo, simple y directo",
+        "NO explica qué pasa después ni menciona que se descuenta o se suma al primer mes",
+        "NO condiciona el 'sin costo' con ninguna aclaración de cobro"
+      ]
+    },
+    {
+      "id": "E5",
+      "categoria": "E",
+      "descripcion": "Insiste con qué pasa si se queda — no se mete, deriva",
+      "turnos": ["hola", "Villa Crespo, 9 años", "la prueba es gratis?", "y si después se queda, esa clase me la cobran en el mes?"],
+      "criterios": [
+        "Dice que la clase de prueba es sin costo",
+        "Ante la repregunta NO improvisa una política de cobro",
+        "Deriva ese detalle al equipo por WhatsApp"
       ]
     },
     {
       "id": "E2",
       "categoria": "E",
-      "descripcion": "Pregunta por la matrícula",
+      "descripcion": "Pregunta por la matrícula — es promo de agosto",
       "turnos": ["hola", "Caballito, 12 años", "hay que pagar matrícula?"],
       "criterios": [
         "Media matrícula $35.000",
+        "Aclara que es una promoción válida durante agosto y que en septiembre se actualiza",
         "Aclara que es una sola por familia",
         "Menciona que incluye la camiseta",
         "Aclara que es aparte de la cuota mensual"
@@ -265,23 +278,24 @@
     {
       "id": "F1",
       "categoria": "F",
-      "descripcion": "Combinación entre sedes confirmada",
+      "descripcion": "Combinación entre sedes — confirma que se puede y deriva, sin meterse",
       "turnos": ["hola", "podemos combinar dos sedes?"],
       "criterios": [
         "Confirma que se puede combinar",
-        "Si da un precio, es el de Lunes en Villa Crespo + Miércoles en Caballito: $107.000 / $115.000",
-        "No inventa precios para otras combinaciones"
+        "NO arma la combinación ni menciona días",
+        "NO da ningún precio de combinación, tampoco $107.000 ni $115.000",
+        "Deriva al equipo por WhatsApp para el presupuesto"
       ]
     },
     {
       "id": "F2",
       "categoria": "F",
-      "descripcion": "Combinación no listada — no debe inventar precio",
-      "turnos": ["hola", "se puede combinar Núñez con Colegiales? cuánto saldría?"],
+      "descripcion": "Insiste con el precio de una combinación — igual no se mete",
+      "turnos": ["hola", "se puede combinar Núñez con Colegiales? cuánto saldría?", "dale pero decime más o menos cuánto"],
       "criterios": [
-        "NO inventa un precio para esa combinación",
-        "Dice que se puede armar y que la escuela arma el presupuesto según los días",
-        "Puede ofrecer el contacto de WhatsApp"
+        "NO inventa ni estima un precio de combinación, ni siquiera aproximado",
+        "Sostiene la derivación al equipo aunque le insistan",
+        "Pasa el link de WhatsApp"
       ]
     },
     {
@@ -302,18 +316,19 @@
       "turnos": ["hola", "tienen sede en Palermo?"],
       "criterios": [
         "Dice que no hay sede en Palermo",
-        "Nombra las sedes que sí existen",
+        "Ofrece Colegiales o Villa Crespo, que son las más cercanas a Palermo",
         "NO inventa una sede en Palermo"
       ]
     },
     {
       "id": "G2",
       "categoria": "G",
-      "descripcion": "Pregunta por algo que no está en el material",
+      "descripcion": "Pregunta por torneos — dato que ahora sí tiene",
       "turnos": ["hola", "Caballito, 10 años", "juegan torneos? hay campeonato?"],
       "criterios": [
-        "NO inventa información sobre torneos o campeonatos",
-        "Dice que eso lo confirma la escuela y ofrece el contacto"
+        "Menciona los torneos internos dentro de las clases, sin costo adicional",
+        "Menciona el torneo formativo interno de los sábados en La Cantera, Villa del Parque, con inscripción aparte",
+        "NO inventa fechas, categorías ni precios de inscripción"
       ]
     },
     {
@@ -478,11 +493,102 @@
       "id": "J4",
       "categoria": "J",
       "descripcion": "No repite el link si ya lo pasó",
-      "turnos": ["hola", "Colegiales, 9 años", "cómo coordino la prueba?", "y hay que llevar botines?"],
+      "turnos": ["hola", "Colegiales, 9 años", "cómo coordino la prueba?", "y me pasás el alias para transferir?"],
       "criterios": [
         "En el último turno no vuelve a pegar el link entero",
         "Le dice que esa duda se la responden por el WhatsApp que ya le pasó",
-        "No inventa qué indumentaria hace falta"
+        "NO inventa un alias ni un CBU"
+      ]
+    },
+    {
+      "id": "A6",
+      "categoria": "A",
+      "descripcion": "Saludo con cortesía — sigue siendo solo apertura, sin repreguntar la zona",
+      "turnos": ["hola, cómo estás?"],
+      "criterios": [
+        "Salen exactamente los 2 mensajes de apertura y nada más",
+        "NO contesta 'todo bien por acá' ni agrega un mensaje propio",
+        "NO vuelve a preguntar de dónde son: la apertura ya lo preguntó"
+      ]
+    },
+    {
+      "id": "C6",
+      "categoria": "C",
+      "descripcion": "Núñez con horario a confirmar — ofrece segunda opción en otra sede",
+      "turnos": ["hola", "Núñez, tiene 6 años"],
+      "criterios": [
+        "Ofrece el grupo de 1ro y 2do grado, lunes o miércoles 17.15 a 18.15",
+        "Aclara que ese horario está a confirmar, que depende de que se arme el grupo",
+        "Ofrece o pregunta por una segunda opción en otra sede, por las dudas",
+        "Da el precio $81.000 efectivo / $89.000 transferencia"
+      ]
+    },
+    {
+      "id": "G6",
+      "categoria": "G",
+      "descripcion": "Qué tiene que llevar — dato que ahora sí tiene",
+      "turnos": ["hola", "Villa Crespo, 10 años", "qué tiene que llevar?"],
+      "criterios": [
+        "Dice ropa cómoda, zapatillas deportivas, agua y el pelo atado",
+        "NO pide botines, canilleras ni ningún equipamiento que no esté en esa lista",
+        "No deriva al WhatsApp por esto: lo contesta"
+      ]
+    },
+    {
+      "id": "G7",
+      "categoria": "G",
+      "descripcion": "Vacaciones — dato que ahora sí tiene",
+      "turnos": ["hola", "Caballito, 12 años", "en vacaciones siguen las clases?"],
+      "criterios": [
+        "Dice que en vacaciones de invierno la actividad sigue con normalidad",
+        "Aclara que no hacen colonia",
+        "Dice que en verano la escuela cierra enero y febrero",
+        "No inventa fechas exactas de receso"
+      ]
+    },
+    {
+      "id": "K1",
+      "categoria": "K",
+      "descripcion": "Barrio sin sede cerca — recomienda la más cercana sin tirar la lista de cuatro",
+      "turnos": ["hola", "de Barracas"],
+      "criterios": [
+        "Recomienda Caballito, que es la sede más cercana a Barracas",
+        "Es honesta con que no le queda al lado",
+        "NO enumera las cuatro sedes para que elija",
+        "Pregunta si le queda cómodo acercarse"
+      ]
+    },
+    {
+      "id": "K2",
+      "categoria": "K",
+      "descripcion": "Barrio con dos sedes cerca",
+      "turnos": ["hola", "vivimos en Belgrano"],
+      "criterios": [
+        "Ofrece Núñez y Colegiales, que son las dos más cercanas a Belgrano",
+        "Deja que la familia elija entre esas dos",
+        "NO ofrece Caballito, que queda del otro lado"
+      ]
+    },
+    {
+      "id": "K3",
+      "categoria": "K",
+      "descripcion": "Fuera de CABA pero pegado a una sede",
+      "turnos": ["hola", "somos de Vicente López"],
+      "criterios": [
+        "Aclara que las sedes están todas dentro de Capital",
+        "Menciona que Núñez es la que les puede quedar cerca",
+        "No corta la conversación por ser de provincia"
+      ]
+    },
+    {
+      "id": "K4",
+      "categoria": "K",
+      "descripcion": "Fuera de CABA y lejos — igual menciona las sedes",
+      "turnos": ["hola", "somos de Quilmes"],
+      "criterios": [
+        "Dice que las sedes están todas en CABA y que probablemente les quede lejos",
+        "Igual les nombra las sedes, no cierra la puerta",
+        "NO inventa una sede en zona sur ni en provincia"
       ]
     }
   ]
