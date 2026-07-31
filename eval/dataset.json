@@ -9,7 +9,8 @@
     "F": "Combinaciones entre sedes y descuentos",
     "G": "Anti-alucinación y fuera de scope",
     "H": "Formato y tono",
-    "I": "Multi-turno y cambios de intención"
+    "I": "Multi-turno y cambios de intención",
+    "J": "Sala de 4 como piso y derivación al WhatsApp"
   },
   "casos": [
     {
@@ -72,10 +73,11 @@
     {
       "id": "B1",
       "categoria": "B",
-      "descripcion": "Nena de 4 años — solo Villa Crespo tiene grupo",
-      "turnos": ["hola", "somos de Villa Crespo, la nena tiene 4 años"],
+      "descripcion": "Nena de 4 años en Villa Crespo — repregunta la sala y después da el grupo",
+      "turnos": ["hola", "somos de Villa Crespo, la nena tiene 4 años", "sala de 4"],
       "criterios": [
-        "Confirma que hay grupo en Villa Crespo para 4 años (Sala de 4)",
+        "Antes de dar grupo o precio pregunta en qué sala está",
+        "Confirma que hay grupo en Villa Crespo para Sala de 4",
         "Menciona el horario Lunes o Miércoles 17 a 18 hs",
         "Da el precio $77.000 efectivo y $85.000 transferencia"
       ]
@@ -84,10 +86,10 @@
       "id": "B2",
       "categoria": "B",
       "descripcion": "Nena de 4 años pero la familia es de Caballito — Caballito no tiene ese grupo",
-      "turnos": ["hola", "somos de Caballito, tiene 4 años"],
+      "turnos": ["hola", "somos de Caballito, tiene 4 años", "está en sala de 4"],
       "criterios": [
         "Aclara que Caballito no tiene grupo para esa edad",
-        "Ofrece Villa Crespo, que es la única sede con grupo de 4 años",
+        "Ofrece Villa Crespo, que es la única sede con Sala de 4",
         "NO inventa un grupo de 4 años en Caballito"
       ]
     },
@@ -108,9 +110,10 @@
       "descripcion": "Nena de 5 años en Núñez — Núñez arranca en 1er grado",
       "turnos": ["hola", "Núñez, tiene 5 años"],
       "criterios": [
-        "Aclara que Núñez no tiene grupo para 5 años",
+        "Aclara que Núñez no tiene grupo para 5 años, arranca en 1er grado",
         "Ofrece Villa Crespo o Colegiales",
-        "NO inventa un grupo en Núñez"
+        "NO inventa un grupo en Núñez",
+        "Puede repreguntar la sala antes de contestar; lo que no puede es ofrecerle un grupo de Núñez"
       ]
     },
     {
@@ -119,8 +122,9 @@
       "descripcion": "Consulta directa por edad mínima",
       "turnos": ["hola", "desde qué edad toman?"],
       "criterios": [
-        "Responde que desde los 4 años",
-        "Puede aclarar que el grupo de 4 años está solo en Villa Crespo",
+        "Responde que desde Sala de 4 (4 años)",
+        "Aclara que con Sala de 3 todavía no las toman, o al menos no promete que sí",
+        "Puede aclarar que el grupo de Sala de 4 está solo en Villa Crespo",
         "No dice una edad mínima distinta de 4"
       ]
     },
@@ -284,7 +288,7 @@
       "id": "F3",
       "categoria": "F",
       "descripcion": "Pregunta por dos estímulos en Villa Crespo",
-      "turnos": ["hola", "Villa Crespo, 5 años", "y si va dos veces por semana?"],
+      "turnos": ["hola", "Villa Crespo, 5 años", "está en sala de 5", "y si va dos veces por semana?"],
       "criterios": [
         "Lunes y Miércoles 17 a 18 hs, 2 estímulos",
         "$104.000 efectivo / $112.000 transferencia",
@@ -411,9 +415,10 @@
     {
       "id": "I3",
       "categoria": "I",
-      "descripcion": "Dos hijas de edades distintas",
-      "turnos": ["hola", "Villa Crespo, tengo una de 5 y otra de 12"],
+      "descripcion": "Dos hijas de edades distintas — una de 5 obliga a repreguntar la sala",
+      "turnos": ["hola", "Villa Crespo, tengo una de 5 y otra de 12", "la de 5 está en sala de 5"],
       "criterios": [
+        "Antes de dar el grupo de la de 5 pregunta en qué sala está",
         "Da el grupo correcto para cada una (Sala de 4 y 5 / 1er grado para la de 5; 3er grado a 1er año para la de 12)",
         "No mezcla los precios de los dos grupos",
         "Puede mencionar el descuento de hermanas"
@@ -425,9 +430,59 @@
       "descripcion": "Quiere coordinar la clase de prueba",
       "turnos": ["hola", "Caballito, 11 años", "buenísimo, cómo hago para anotarla a una prueba?"],
       "criterios": [
-        "Deriva al WhatsApp 11 2394 7419 para coordinar",
+        "Pasa el link de WhatsApp para coordinar con el equipo",
         "NO confirma día ni horario de la clase de prueba por su cuenta",
         "No promete la inscripción"
+      ]
+    },
+    {
+      "id": "J1",
+      "categoria": "J",
+      "descripcion": "Sala de 3 — no hay grupo, se la espera el año que viene",
+      "turnos": ["hola", "somos de Villa Crespo, tiene 4 años", "está en sala de 3"],
+      "criterios": [
+        "Antes de dar precios pregunta en qué sala está, porque dijo 4 años",
+        "Al saber que es sala de 3 avisa que todavía no la pueden recibir, que los grupos arrancan en sala de 4",
+        "La invita a volver el año que viene, con calidez",
+        "NO le pasa precios ni horarios",
+        "NO le ofrece clase de prueba ni la deriva para inscribirla"
+      ]
+    },
+    {
+      "id": "J2",
+      "categoria": "J",
+      "descripcion": "Tiene 5 años pero está en Sala de 4 — la sala manda sobre la edad",
+      "turnos": ["hola", "Colegiales, tiene 5 años", "está en sala de 4, es de diciembre"],
+      "criterios": [
+        "Repregunta la sala antes de dar cualquier grupo",
+        "Usa la sala que le dijeron y no la equivalencia por edad (Sala de 4, no Sala de 5)",
+        "Avisa que Colegiales arranca en Sala de 5, así que ese grupo no le sirve",
+        "Ofrece Villa Crespo, que es la única sede con Sala de 4",
+        "Pasa el precio correcto del grupo Sala de 4 y 5 y 1er grado ($77.000 efectivo / $85.000 transferencia)"
+      ]
+    },
+    {
+      "id": "J3",
+      "categoria": "J",
+      "descripcion": "Derivación con resumen — el link sale bien armado",
+      "turnos": ["hola", "Núñez, tiene 10 años", "genial, quiero coordinar la prueba"],
+      "criterios": [
+        "La respuesta incluye un link que empieza con https://api.whatsapp.com/send/?phone=5491123947419",
+        "El link trae el parámetro text= con un resumen de la charla (edad o grado de la nena y la sede de Núñez)",
+        "El resumen está escrito en primera persona, como si lo mandara la familia",
+        "El link va en su propio globo, sin la marca [[WSP: ]] visible en el texto",
+        "No inventa día ni horario de la clase de prueba"
+      ]
+    },
+    {
+      "id": "J4",
+      "categoria": "J",
+      "descripcion": "No repite el link si ya lo pasó",
+      "turnos": ["hola", "Colegiales, 9 años", "cómo coordino la prueba?", "y hay que llevar botines?"],
+      "criterios": [
+        "En el último turno no vuelve a pegar el link entero",
+        "Le dice que esa duda se la responden por el WhatsApp que ya le pasó",
+        "No inventa qué indumentaria hace falta"
       ]
     }
   ]

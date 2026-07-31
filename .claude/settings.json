@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node \"/tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/832e61f0-9e0a-4763-b051-9d085eaa6a96/scratchpad/check.mjs\")",
+      "Bash(node --check bot.js)",
+      "Bash(node --check server.js)",
+      "Bash(node --check prompt.js)",
+      "Bash(node --check eval/run-eval.js)",
+      "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node -e \"import\\('./bot.js'\\).then\\(m=>console.log\\('link:', m.linkWsp\\('Hola! Soy la mama de Delfi, sala de 4, sede Villa Crespo.'\\)\\)\\)\")"
+    ]
+  }
+}

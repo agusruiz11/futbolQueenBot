@@ -10,6 +10,26 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export const CONTACTO_WSP = '11 2394 7419';
 export const FALLBACK_MSG = `Perdón, se me complicó procesar tu consulta. Escribinos directo al WhatsApp y te respondemos: ${CONTACTO_WSP}`;
 
+// El bot cierra derivando al WhatsApp que atiende Demián, con el resumen de la
+// charla ya escrito en el chat. El modelo no arma la URL: escribe [[WSP: resumen]]
+// y la reemplazamos acá, porque el url-encoding a mano lo rompe seguido.
+export const WSP_BASE =
+  'https://api.whatsapp.com/send/?phone=5491123947419&type=phone_number&app_absent=0';
+
+const RESUMEN_POR_DEFECTO =
+  'Hola! Vengo del Instagram de Futbol Queens y quiero coordinar una clase de prueba.';
+
+const WSP_MARCA_RE = /\[\[\s*WSP\s*:\s*([\s\S]*?)\]\]/g;
+
+export function linkWsp(resumen = '') {
+  const texto = resumen.trim() || RESUMEN_POR_DEFECTO;
+  return `${WSP_BASE}&text=${encodeURIComponent(texto)}`;
+}
+
+export function insertarLinkWsp(texto) {
+  return texto.replace(WSP_MARCA_RE, (_, resumen) => linkWsp(resumen));
+}
+
 // ─── Formato de salida ───────────────────────────────────────────────────────
 
 // El guion pide preguntas sin signo de apertura ("De dónde son?" y no "¿De dónde
@@ -35,7 +55,8 @@ export const MAX_GLOBOS = Number(process.env.MAX_GLOBOS ?? 3);
 export function separarEnGlobos(texto) {
   return texto
     .split(/^\s*-{3,}\s*$/m)
-    .map((t) => limpiarMarkdown(sinSignosDeApertura(t)))
+    // El link va último: así la limpieza de markdown y de signos no le toca la URL.
+    .map((t) => insertarLinkWsp(limpiarMarkdown(sinSignosDeApertura(t))))
     .filter(Boolean)
     .slice(0, MAX_GLOBOS);
 }
@@ -52,16 +73,33 @@ const FALLBACKS = (process.env.BOT_FALLBACKS || 'true') !== 'false';
 
 export const BOT_CONFIG = { MODEL, EFFORT, MAX_GLOBOS, FALLBACKS };
 
-function fechaHoy() {
-  return new Intl.DateTimeFormat('es-AR', {
-    timeZone: process.env.BOT_TZ || 'America/Argentina/Buenos_Aires',
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(new Date());
+// Franja en la que Demián está sobre el WhatsApp. Fuera de ella el bot contesta
+// igual, pero no promete respuesta inmediata.
+const WSP_DESDE = Number(process.env.WSP_HORA_DESDE ?? 9);
+const WSP_HASTA = Number(process.env.WSP_HORA_HASTA ?? 22);
+
+function ahora() {
+  const timeZone = process.env.BOT_TZ || 'America/Argentina/Buenos_Aires';
+  const d = new Date();
+  const fecha = new Intl.DateTimeFormat('es-AR', {
+    timeZone, year: 'numeric', month: 'long', day: 'numeric',
+  }).format(d);
+  const hora = Number(
+    new Intl.DateTimeFormat('es-AR', { timeZone, hour: 'numeric', hourCycle: 'h23' }).format(d),
+  );
+  return { fecha, hora };
+}
+
+function notaHorarioWsp(hora) {
+  return hora >= WSP_DESDE && hora < WSP_HASTA
+    ? 'A esta hora están atendiendo el WhatsApp: al derivar podés decir que le responden a la brevedad.'
+    : `A esta hora NO están atendiendo el WhatsApp. Al derivar NO prometas respuesta inmediata: decile que le van a responder mañana a partir de las ${WSP_DESDE} de la mañana.`;
 }
 
 // Devuelve un array de globos de chat listos para enviar.
 export async function runBot(messages, { channel = 'web' } = {}) {
-  const system = `Hoy es ${fechaHoy()}.\n\n${SYSTEM_PROMPT}`;
+  const { fecha, hora } = ahora();
+  const system = `Hoy es ${fecha} y son las ${String(hora).padStart(2, '0')} hs. ${notaHorarioWsp(hora)}\n\n${SYSTEM_PROMPT}`;
 
   const response = await client.beta.messages.create({
     model: MODEL,

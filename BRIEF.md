@@ -3,7 +3,8 @@
 Volcado del documento `Futbol_Queens_Guion_Apertura_Bot.docx.pdf` más las decisiones
 que hubo que tomar para que el bot funcione. **La sección 3 es la que hay que
 llevarle a la agencia**: son huecos y contradicciones del material que hoy están
-tapados con una decisión provisoria.
+tapados con una decisión provisoria. La versión para mandar, sin jerga técnica, está
+en [PREGUNTAS-AGENCIA.md](PREGUNTAS-AGENCIA.md).
 
 ---
 
@@ -24,7 +25,9 @@ herramienta para llegar a la clase de prueba.
 - Sin markdown — se limpia por código.
 - 💜 solo en el saludo inicial.
 
-**Canales.** Widget web (`/chat`) e Instagram DM (`/webhook`).
+**Canales.** Instagram DM (`/webhook`) — confirmado por la agencia el 30/07: el bot va
+a Instagram solamente. El widget web (`/chat`) queda como banco de pruebas y por si más
+adelante lo quieren en el sitio. WhatsApp lo atiende Demián, una persona.
 
 ---
 
@@ -34,8 +37,10 @@ Ninguna está en el documento. Todas son reversibles.
 
 | # | Hueco | Decisión provisoria | Dónde vive |
 |---|---|---|---|
-| 1 | El doc no dice **cómo se agenda la clase de prueba** — que es el objetivo del bot | El bot deriva al WhatsApp 11 2394 7419 y no confirma día ni horario | `prompt.js`, regla 3 y sección CONTACTO |
-| 2 | No hay **mapeo de edad a grado escolar**, pero los grupos están por grado y la gente dice la edad | Equivalencia estándar de CABA (6 años = 1er grado, 13 = 1er año, 17 = 5to año), con la aclaración de que la escuela confirma el grupo | `prompt.js`, sección DE EDAD A GRUPO ESCOLAR |
+| 1 | ~~El doc no dice **cómo se agenda la clase de prueba**~~ **Resuelto e implementado 30/07** | No se agenda por el bot. Cuando tiene edad (en rango) y sede, cierra pasando el link del WhatsApp de Demián con un resumen de la charla ya escrito. El modelo no arma la URL: escribe `[[WSP: resumen]]` y `bot.js` lo reemplaza por `https://api.whatsapp.com/send/?phone=5491123947419&…&text=<encodeado>` | `prompt.js` sección CÓMO DERIVAR AL WHATSAPP · `bot.js` `insertarLinkWsp()` |
+| 2 | No hay **mapeo de edad a grado escolar**, pero los grupos están por grado y la gente dice la edad | Equivalencia estándar de CABA (6 años = 1er grado, 13 = 1er año, 17 = 5to año). **Corregido 30/07:** con 4 o 5 años el bot repregunta la sala, porque una nena que cumplió 4 este año suele estar en Sala de 3. De 6 en adelante alcanza con la edad | `prompt.js`, PASO 2 BIS y sección DE EDAD A GRUPO ESCOLAR |
+| 8 | El doc dice "desde 4 años", pero el piso real es **Sala de 4** | Con Sala de 3 el bot avisa que todavía no la pueden recibir y la invita para el año que viene. No pasa precios ni deriva para inscribirla | `prompt.js`, sección SALA DE 3: TODAVÍA NO |
+| 9 | Hasta qué hora se puede prometer respuesta en el WhatsApp | Demián atiende casi todo el día. Fuera de 9-22 el bot deriva igual pero avisa que le responden al otro día. La franja se mueve con `WSP_HORA_DESDE` / `WSP_HORA_HASTA` | `bot.js`, `notaHorarioWsp()` |
 | 3 | Qué hacer si el primer mensaje del usuario ya trae edad y zona | Salen igual los 3 mensajes de apertura y el bot sigue desde la información que ya dio. Si el mensaje es solo un saludo, salen los 3 y nada más | `bot.js`, `esSoloSaludo()` |
 | 4 | Contradicción sobre la clase de prueba (ver 3.1) | Formulación canónica única, escrita palabra por palabra en el prompt | `prompt.js`, sección MATRÍCULA Y CLASE DE PRUEBA |
 | 5 | Grupos que se superponen (ver 3.3) | El bot muestra las dos opciones con sus precios y aclara que la escuela confirma cuál corresponde | `prompt.js`, nota en VILLA CRESPO |
@@ -45,6 +50,19 @@ Ninguna está en el documento. Todas son reversibles.
 ---
 
 ## 3. Preguntas para la agencia
+
+> **Versión para mandar:** [PREGUNTAS-AGENCIA.md](PREGUNTAS-AGENCIA.md) — misma info,
+> sin jerga técnica, con las respuestas del 30/07 ya incorporadas.
+
+**Respondido el 30/07 (Victoria) y ya implementado:** Instagram solamente, WhatsApp lo
+atiende Demián — cae la 3.9. El bot deriva con edad + sede y cierra con el link de
+WhatsApp con resumen — cae "cómo se agenda la clase de prueba" de la 3.7. El piso es
+**Sala de 4**: con 4 o 5 años el bot repregunta la sala, y con Sala de 3 avisa que la
+esperan el año que viene. Demián atiende casi todo el día; después de las 22 el bot no
+promete respuesta inmediata.
+
+**Lo único que quedó abierto de esa tanda:** si está bien redactado el mensaje de
+resumen que el bot deja escrito en el WhatsApp (ver PREGUNTAS-AGENCIA.md, punto 1).
 
 ### 3.1 La clase de prueba se contradice consigo misma
 
@@ -83,15 +101,15 @@ criterio real para asignar el grupo, pasámelo y lo hago determinístico.**
 
 Derivado de las tablas, hoy queda así:
 
-| Sede | Edades que cubre | Lo que NO cubre |
+| Sede | Cubre | Lo que NO cubre |
 |---|---|---|
-| Villa Crespo | 4 a 17 | — |
-| Núñez | 6 a 17 | 4 y 5 años |
-| Colegiales | 5 a 14 | 4 años, y de 15 a 17 |
-| Caballito | 8 a 17 | de 4 a 7 años |
+| Villa Crespo | Sala de 4 a 5to año (4 a 17) | — |
+| Núñez | 1er grado a 5to año (6 a 17) | Sala de 4 y Sala de 5 |
+| Colegiales | Sala de 5 a 2do año (5 a 14) | Sala de 4, y de 15 a 17 |
+| Caballito | 3er grado a 5to año (8 a 17) | Sala de 4 hasta 2do grado |
 
 Consecuencias que el bot está diciendo hoy:
-- Una nena de **4 años solo puede ir a Villa Crespo**.
+- Una nena de **Sala de 4 solo puede ir a Villa Crespo**.
 - Una chica de **15 a 17 años no puede ir a Colegiales**.
 - Un nene… perdón, una nena de **5, 6 o 7 años no puede ir a Caballito**.
 
@@ -120,7 +138,6 @@ Hoy, ante cualquiera de estos, deriva al WhatsApp. Cada uno que completemos es u
 consulta menos para el equipo humano:
 
 - Formas de pago: alias / CBU / si se paga en la sede
-- Cómo se agenda la clase de prueba (día, cupo, con quién)
 - Indumentaria: qué tiene que llevar, si hace falta comprar algo además de la camiseta
 - Si hay torneos, campeonatos o partidos
 - Vacantes disponibles por grupo
@@ -135,12 +152,10 @@ Confirmado en la sección 11 del documento ($8.000 de diferencia en todos los ca
 Lo dejo anotado acá porque es al revés de lo habitual y alguien lo va a querer
 "corregir" en algún momento. **No es un error de tipeo.**
 
-### 3.9 El documento apunta a WhatsApp, pero el bot va a web e Instagram
+### 3.9 El documento apunta a WhatsApp, pero el bot va a web e Instagram — RESPONDIDA
 
-El pie del guion dice *"Contacto: WhatsApp 11 2394 7419"*. El bot que estamos
-armando atiende el widget web y los DM de Instagram, y **deriva** a ese WhatsApp.
-**Confirmar que el WhatsApp lo atiende una persona** — si también tiene que
-atenderlo el bot, hay que sumar ese canal (no está implementado).
+El bot va a **Instagram solamente**; el WhatsApp lo atiende Demián. No hay que sumar
+ese canal.
 
 ---
 
