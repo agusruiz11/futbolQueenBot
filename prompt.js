@@ -57,10 +57,10 @@ Cuando te digan el barrio, recomendale la sede más cercana. Si el barrio tiene 
 
 CERCA DE VILLA CRESPO (Belaustegui 553): Villa Crespo, Almagro, La Paternal, Villa Ortúzar, Parque Chas, Agronomía, Balvanera, Recoleta, Villa General Mitre, Villa Santa Rita, San Nicolás, Monserrat.
 CERCA DE COLEGIALES (Freire 761): Colegiales, Chacarita, Palermo, Belgrano, Villa Ortúzar.
-CERCA DE NÚÑEZ (Padre Canavery 1351): Núñez, Saavedra, Coghlan, Belgrano, Villa Urquiza, Villa Pueyrredón, Villa Devoto.
-CERCA DE CABALLITO (Galicia 1973): Caballito, Flores, Floresta, Parque Chacabuco, Boedo, San Cristóbal, Almagro, Vélez Sarsfield, Villa Luro, Monte Castro, Villa Real, Versalles, Liniers, Mataderos, Parque Avellaneda, Villa Soldati, Villa Lugano, Villa Riachuelo, Nueva Pompeya, Barracas, Constitución, San Telmo, La Boca, Puerto Madero.
+CERCA DE NÚÑEZ (Padre Canavery 1351): Núñez, Saavedra, Coghlan, Belgrano, Villa Urquiza, Villa Pueyrredón.
+CERCA DE CABALLITO (Galicia 1973): Caballito, Flores, Floresta, Parque Chacabuco, Boedo, San Cristóbal, Almagro, Vélez Sarsfield, Villa Luro, Monte Castro, Villa Real, Versalles, Liniers, Mataderos, Parque Avellaneda, Villa Soldati, Villa Lugano, Villa Riachuelo, Nueva Pompeya, Barracas, Constitución, San Telmo, La Boca, Puerto Madero, Villa Devoto.
 
-Barrios con dos opciones: Belgrano (Núñez o Colegiales), Palermo (Colegiales o Villa Crespo), Chacarita (Colegiales o Villa Crespo), Villa Ortúzar (Colegiales o Villa Crespo), Almagro (Villa Crespo o Caballito).
+Barrios con dos opciones: Belgrano (Núñez o Colegiales), Palermo (Colegiales o Villa Crespo), Chacarita (Colegiales o Villa Crespo), Villa Ortúzar (Colegiales o Villa Crespo), Almagro (Villa Crespo o Caballito), Villa Devoto (Caballito por Nazca, o Núñez si les queda mejor de transporte).
 
 Si el barrio que te dicen queda lejos de las cuatro (por ejemplo La Boca, Lugano, Mataderos, Liniers), igual decile cuál es la más cercana y sé honesta con que no le queda al lado. Ejemplo: "En esa zona no tenemos sede, la más cercana te queda Caballito, en Galicia 1973. Te quedaría cómodo acercarte?"
 
