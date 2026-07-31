@@ -1,0 +1,434 @@
+{
+  "descripcion": "Casos de evaluación del bot de Fútbol Queens. Cada caso replica una conversación real turno por turno y evalúa la transcripción completa contra los criterios.",
+  "categorias": {
+    "A": "Apertura y calificación (zona + edad antes de dar precios)",
+    "B": "Cobertura de sede por edad",
+    "C": "Precios y horarios correctos",
+    "D": "Mayores de 18 — derivación",
+    "E": "Matrícula y clase de prueba",
+    "F": "Combinaciones entre sedes y descuentos",
+    "G": "Anti-alucinación y fuera de scope",
+    "H": "Formato y tono",
+    "I": "Multi-turno y cambios de intención"
+  },
+  "casos": [
+    {
+      "id": "A1",
+      "categoria": "A",
+      "descripcion": "Saludo pelado — solo deben salir los 3 mensajes de apertura",
+      "turnos": ["hola"],
+      "criterios": [
+        "Salen exactamente los 3 mensajes de apertura del guion, en orden",
+        "El primero incluye el emoji 💜 y menciona el rango 4 a 17 años",
+        "El segundo nombra las cuatro sedes: Villa Crespo, Colegiales, Núñez y Caballito",
+        "El tercero pregunta de dónde son, sin signo de apertura",
+        "No se agrega ningún mensaje extra"
+      ]
+    },
+    {
+      "id": "A2",
+      "categoria": "A",
+      "descripcion": "Pide precio de entrada, antes de dar zona y edad",
+      "turnos": ["hola, cuánto sale?"],
+      "criterios": [
+        "NO da ningún precio",
+        "Pregunta la zona o la edad antes de avanzar",
+        "No inventa un precio 'desde' ni un rango"
+      ]
+    },
+    {
+      "id": "A3",
+      "categoria": "A",
+      "descripcion": "Da la zona pero no la edad",
+      "turnos": ["hola", "somos de Caballito"],
+      "criterios": [
+        "Pregunta la edad de la nena",
+        "No da precios ni horarios todavía",
+        "Hace una sola pregunta"
+      ]
+    },
+    {
+      "id": "A4",
+      "categoria": "A",
+      "descripcion": "Da edad y zona en el mismo mensaje inicial",
+      "turnos": ["Hola! Mi hija tiene 8 años y vivimos en Caballito, quería saber horarios"],
+      "criterios": [
+        "No vuelve a preguntar la edad ni la zona (ya las tiene)",
+        "Pasa el grupo de Caballito que corresponde a 8 años (3ro a 5to grado)",
+        "Menciona el horario Lunes 18 a 20 hs"
+      ]
+    },
+    {
+      "id": "A5",
+      "categoria": "A",
+      "descripcion": "Zona que no es ninguna de las cuatro sedes",
+      "turnos": ["hola", "vivimos en Lanús"],
+      "criterios": [
+        "No la descarta de entrada",
+        "Pregunta si le sirve alguno de los barrios de las sedes, o menciona que a veces conviene igual por horario",
+        "No inventa una sede en Lanús ni en zona sur"
+      ]
+    },
+    {
+      "id": "B1",
+      "categoria": "B",
+      "descripcion": "Nena de 4 años — solo Villa Crespo tiene grupo",
+      "turnos": ["hola", "somos de Villa Crespo, la nena tiene 4 años"],
+      "criterios": [
+        "Confirma que hay grupo en Villa Crespo para 4 años (Sala de 4)",
+        "Menciona el horario Lunes o Miércoles 17 a 18 hs",
+        "Da el precio $77.000 efectivo y $85.000 transferencia"
+      ]
+    },
+    {
+      "id": "B2",
+      "categoria": "B",
+      "descripcion": "Nena de 4 años pero la familia es de Caballito — Caballito no tiene ese grupo",
+      "turnos": ["hola", "somos de Caballito, tiene 4 años"],
+      "criterios": [
+        "Aclara que Caballito no tiene grupo para esa edad",
+        "Ofrece Villa Crespo, que es la única sede con grupo de 4 años",
+        "NO inventa un grupo de 4 años en Caballito"
+      ]
+    },
+    {
+      "id": "B3",
+      "categoria": "B",
+      "descripcion": "Adolescente de 16 años en zona Colegiales — Colegiales llega hasta 2do año",
+      "turnos": ["hola", "vivimos cerca de Colegiales, mi hija tiene 16"],
+      "criterios": [
+        "Aclara que en Colegiales no hay grupo para 16 años",
+        "Ofrece Villa Crespo, Núñez o Caballito, que sí tienen grupo de esa edad",
+        "NO inventa un grupo de 16 años en Colegiales"
+      ]
+    },
+    {
+      "id": "B4",
+      "categoria": "B",
+      "descripcion": "Nena de 5 años en Núñez — Núñez arranca en 1er grado",
+      "turnos": ["hola", "Núñez, tiene 5 años"],
+      "criterios": [
+        "Aclara que Núñez no tiene grupo para 5 años",
+        "Ofrece Villa Crespo o Colegiales",
+        "NO inventa un grupo en Núñez"
+      ]
+    },
+    {
+      "id": "B5",
+      "categoria": "B",
+      "descripcion": "Consulta directa por edad mínima",
+      "turnos": ["hola", "desde qué edad toman?"],
+      "criterios": [
+        "Responde que desde los 4 años",
+        "Puede aclarar que el grupo de 4 años está solo en Villa Crespo",
+        "No dice una edad mínima distinta de 4"
+      ]
+    },
+    {
+      "id": "C1",
+      "categoria": "C",
+      "descripcion": "Precio de Colegiales para 6 años",
+      "turnos": ["hola", "Colegiales, 6 años"],
+      "criterios": [
+        "Grupo Sala de 5 a 2do grado",
+        "Horario Viernes 17 a 18 hs",
+        "Precio $80.000 efectivo y $88.000 transferencia",
+        "Da SIEMPRE los dos precios, efectivo y transferencia"
+      ]
+    },
+    {
+      "id": "C2",
+      "categoria": "C",
+      "descripcion": "Núñez con horario a confirmar",
+      "turnos": ["hola", "Núñez, mi hija tiene 7 años"],
+      "criterios": [
+        "Grupo 1ro y 2do grado, $81.000 efectivo / $89.000 transferencia",
+        "Aclara explícitamente que el horario está sujeto a confirmación por parte de la escuela",
+        "No presenta el horario como cerrado"
+      ]
+    },
+    {
+      "id": "C3",
+      "categoria": "C",
+      "descripcion": "Colegiales dos veces por semana",
+      "turnos": ["hola", "Colegiales, 10 años", "y si va dos veces por semana?"],
+      "criterios": [
+        "Martes y Jueves 17 a 19 hs",
+        "$124.000 efectivo / $132.000 transferencia",
+        "No confunde el precio de 1 vez ($94.000) con el de 2 veces"
+      ]
+    },
+    {
+      "id": "C4",
+      "categoria": "C",
+      "descripcion": "Caballito adolescente de 15 años",
+      "turnos": ["hola", "Caballito, 15 años"],
+      "criterios": [
+        "Grupo 2do año a 5to año, Miércoles 17.30 a 19 hs",
+        "$82.000 efectivo / $90.000 transferencia",
+        "No le ofrece el grupo de 3ro a 5to grado, que es de chicas más chicas"
+      ]
+    },
+    {
+      "id": "C5",
+      "categoria": "C",
+      "descripcion": "Villa Crespo con grupos superpuestos — 8 años entra en dos grupos",
+      "turnos": ["hola", "Villa Crespo, 8 años"],
+      "criterios": [
+        "Reconoce que a esa edad puede entrar en más de un grupo (2do a 4to grado y 3er grado a 1er año)",
+        "Muestra las opciones con sus precios, o aclara que la escuela confirma el grupo definitivo",
+        "No inventa un precio que no esté en la tabla"
+      ]
+    },
+    {
+      "id": "D1",
+      "categoria": "D",
+      "descripcion": "Jugadora mayor de edad",
+      "turnos": ["hola", "es para mí, tengo 24 años"],
+      "criterios": [
+        "NO le ofrece inscripción en Fútbol Queens",
+        "Deriva a De Taquito Femenino y a La Sede Colegiales",
+        "Aclara que Fútbol Queens trabaja con nenas y adolescentes de 4 a 17",
+        "Cierra con buena onda y no sigue ofreciendo horarios ni precios"
+      ]
+    },
+    {
+      "id": "D2",
+      "categoria": "D",
+      "descripcion": "Exactamente 18 años — es el límite",
+      "turnos": ["hola", "tiene 18 años"],
+      "criterios": [
+        "La trata como mayor: deriva a De Taquito Femenino y La Sede Colegiales",
+        "No la inscribe en Fútbol Queens"
+      ]
+    },
+    {
+      "id": "D3",
+      "categoria": "D",
+      "descripcion": "17 años — sí entra, no debe derivar",
+      "turnos": ["hola", "Villa Crespo, 17 años"],
+      "criterios": [
+        "NO la deriva a De Taquito ni a La Sede Colegiales",
+        "Le pasa el grupo de 1er a 5to año de Villa Crespo",
+        "$85.000 efectivo / $93.000 transferencia para 1 vez por semana"
+      ]
+    },
+    {
+      "id": "E1",
+      "categoria": "E",
+      "descripcion": "Pregunta por la clase de prueba",
+      "turnos": ["hola", "Villa Crespo, 9 años", "hay clase de prueba?"],
+      "criterios": [
+        "Dice que la clase de prueba no se cobra en el momento",
+        "Aclara que si la nena sigue, se abona el mes completo incluyendo esa clase, más la matrícula",
+        "Aclara que si no se adapta, no se paga nada",
+        "NO dice solamente 'es gratis' sin la aclaración"
+      ]
+    },
+    {
+      "id": "E2",
+      "categoria": "E",
+      "descripcion": "Pregunta por la matrícula",
+      "turnos": ["hola", "Caballito, 12 años", "hay que pagar matrícula?"],
+      "criterios": [
+        "Media matrícula $35.000",
+        "Aclara que es una sola por familia",
+        "Menciona que incluye la camiseta",
+        "Aclara que es aparte de la cuota mensual"
+      ]
+    },
+    {
+      "id": "E3",
+      "categoria": "E",
+      "descripcion": "Dos hermanas — descuento",
+      "turnos": ["hola", "Villa Crespo, tengo dos nenas de 7 y 10", "hay descuento por hermanas?"],
+      "criterios": [
+        "Menciona el 10% de descuento por hermanas",
+        "Aclara que la matrícula es una sola por familia",
+        "No inventa otro porcentaje"
+      ]
+    },
+    {
+      "id": "E4",
+      "categoria": "E",
+      "descripcion": "Pregunta cómo se paga / alias — dato que no está en el material",
+      "turnos": ["hola", "Núñez, 9 años", "me pasás el alias para transferir?"],
+      "criterios": [
+        "NO inventa un alias, CBU ni cuenta bancaria",
+        "Deriva al WhatsApp 11 2394 7419 para que se lo confirmen"
+      ]
+    },
+    {
+      "id": "F1",
+      "categoria": "F",
+      "descripcion": "Combinación entre sedes confirmada",
+      "turnos": ["hola", "podemos combinar dos sedes?"],
+      "criterios": [
+        "Confirma que se puede combinar",
+        "Si da un precio, es el de Lunes en Villa Crespo + Miércoles en Caballito: $107.000 / $115.000",
+        "No inventa precios para otras combinaciones"
+      ]
+    },
+    {
+      "id": "F2",
+      "categoria": "F",
+      "descripcion": "Combinación no listada — no debe inventar precio",
+      "turnos": ["hola", "se puede combinar Núñez con Colegiales? cuánto saldría?"],
+      "criterios": [
+        "NO inventa un precio para esa combinación",
+        "Dice que se puede armar y que la escuela arma el presupuesto según los días",
+        "Puede ofrecer el contacto de WhatsApp"
+      ]
+    },
+    {
+      "id": "F3",
+      "categoria": "F",
+      "descripcion": "Pregunta por dos estímulos en Villa Crespo",
+      "turnos": ["hola", "Villa Crespo, 5 años", "y si va dos veces por semana?"],
+      "criterios": [
+        "Lunes y Miércoles 17 a 18 hs, 2 estímulos",
+        "$104.000 efectivo / $112.000 transferencia",
+        "No confunde con el precio de 1 vez ($77.000)"
+      ]
+    },
+    {
+      "id": "G1",
+      "categoria": "G",
+      "descripcion": "Pregunta por una sede que no existe",
+      "turnos": ["hola", "tienen sede en Palermo?"],
+      "criterios": [
+        "Dice que no hay sede en Palermo",
+        "Nombra las sedes que sí existen",
+        "NO inventa una sede en Palermo"
+      ]
+    },
+    {
+      "id": "G2",
+      "categoria": "G",
+      "descripcion": "Pregunta por algo que no está en el material",
+      "turnos": ["hola", "Caballito, 10 años", "juegan torneos? hay campeonato?"],
+      "criterios": [
+        "NO inventa información sobre torneos o campeonatos",
+        "Dice que eso lo confirma la escuela y ofrece el contacto"
+      ]
+    },
+    {
+      "id": "G3",
+      "categoria": "G",
+      "descripcion": "Pregunta por vacantes",
+      "turnos": ["hola", "Villa Crespo, 11 años", "hay lugar todavía?"],
+      "criterios": [
+        "NO promete ni confirma vacantes",
+        "Deriva a la escuela para confirmar disponibilidad"
+      ]
+    },
+    {
+      "id": "G4",
+      "categoria": "G",
+      "descripcion": "Intento de que invente un descuento",
+      "turnos": ["hola", "Caballito, 9 años", "me hacés un descuento si pago todo el año adelantado?"],
+      "criterios": [
+        "NO inventa un descuento por pago anual",
+        "Solo menciona el descuento de hermanas si viene al caso",
+        "Deriva a la escuela para negociar"
+      ]
+    },
+    {
+      "id": "G5",
+      "categoria": "G",
+      "descripcion": "Le preguntan si es un bot",
+      "turnos": ["hola", "sos un bot?"],
+      "criterios": [
+        "No miente diciendo que es una persona",
+        "Se presenta como la asistente de Fútbol Queens",
+        "Ofrece el WhatsApp del equipo"
+      ]
+    },
+    {
+      "id": "H1",
+      "categoria": "H",
+      "descripcion": "Ninguna respuesta lleva signo de apertura",
+      "turnos": ["hola", "Villa Crespo", "10 años", "y el precio?"],
+      "criterios": [
+        "NINGUNA respuesta del bot contiene el carácter ¿",
+        "NINGUNA respuesta contiene el carácter ¡",
+        "Las preguntas terminan con ? normalmente"
+      ]
+    },
+    {
+      "id": "H2",
+      "categoria": "H",
+      "descripcion": "Mensajes cortos, no un bloque largo",
+      "turnos": ["hola", "Caballito, 13 años, contame todo por favor"],
+      "criterios": [
+        "La respuesta viene separada en globos cortos, no en un solo párrafo largo",
+        "No usa markdown: sin asteriscos de negrita, sin viñetas, sin títulos",
+        "Como máximo 3 globos"
+      ]
+    },
+    {
+      "id": "H3",
+      "categoria": "H",
+      "descripcion": "Una sola pregunta por respuesta",
+      "turnos": ["hola", "hola qué tal"],
+      "criterios": [
+        "No apila dos o más preguntas en la misma respuesta",
+        "El tono es cálido y cercano, no robótico"
+      ]
+    },
+    {
+      "id": "H4",
+      "categoria": "H",
+      "descripcion": "Emojis solo en el saludo",
+      "turnos": ["hola", "Núñez, 12 años", "gracias!"],
+      "criterios": [
+        "El 💜 aparece solo en el mensaje de apertura",
+        "Las respuestas posteriores no están cargadas de emojis"
+      ]
+    },
+    {
+      "id": "I1",
+      "categoria": "I",
+      "descripcion": "Cambia de sede a mitad de la conversación",
+      "turnos": ["hola", "Caballito, 10 años", "ah pero en realidad nos queda mejor Villa Crespo"],
+      "criterios": [
+        "Pasa a los grupos y precios de Villa Crespo",
+        "Mantiene la edad ya dada (10 años) y no la vuelve a preguntar",
+        "No mezcla precios de Caballito con horarios de Villa Crespo"
+      ]
+    },
+    {
+      "id": "I2",
+      "categoria": "I",
+      "descripcion": "Corrige la edad después de darla",
+      "turnos": ["hola", "Villa Crespo, 6 años", "perdón, me equivoqué, tiene 9"],
+      "criterios": [
+        "Recalcula el grupo para 9 años",
+        "No sigue usando el grupo ni el precio de 6 años",
+        "No vuelve a preguntar la sede"
+      ]
+    },
+    {
+      "id": "I3",
+      "categoria": "I",
+      "descripcion": "Dos hijas de edades distintas",
+      "turnos": ["hola", "Villa Crespo, tengo una de 5 y otra de 12"],
+      "criterios": [
+        "Da el grupo correcto para cada una (Sala de 4 y 5 / 1er grado para la de 5; 3er grado a 1er año para la de 12)",
+        "No mezcla los precios de los dos grupos",
+        "Puede mencionar el descuento de hermanas"
+      ]
+    },
+    {
+      "id": "I4",
+      "categoria": "I",
+      "descripcion": "Quiere coordinar la clase de prueba",
+      "turnos": ["hola", "Caballito, 11 años", "buenísimo, cómo hago para anotarla a una prueba?"],
+      "criterios": [
+        "Deriva al WhatsApp 11 2394 7419 para coordinar",
+        "NO confirma día ni horario de la clase de prueba por su cuenta",
+        "No promete la inscripción"
+      ]
+    }
+  ]
+}

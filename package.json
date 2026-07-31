@@ -1,0 +1,20 @@
+{
+  "name": "futbol-queens-bot",
+  "version": "1.0.0",
+  "description": "Chatbot de Fútbol Queens — escuela de fútbol para niñas y adolescentes en CABA",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "eval": "node eval/run-eval.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "express": "^4.18.2",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
