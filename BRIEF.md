@@ -25,9 +25,16 @@ herramienta para llegar a la clase de prueba, que coordina una persona.
 - El link de WhatsApp lo arma el código, no el modelo: escribe `[[WSP: resumen]]` y
   `insertarLinkWsp()` lo reemplaza por la URL con el texto url-encodeado.
 
-**Apertura.** Dos mensajes por código, no por la IA: saludo y pregunta de zona. La
-agencia pidió sacar el listado de sedes de la apertura para no ser reiterativo — el bot
-recomienda la sede según el barrio que contesten.
+**Apertura.** Dos mensajes por código, no por la IA: presentación y "De dónde son
+ustedes?". La agencia pidió sacar el listado de sedes de la apertura — el bot recomienda
+la sede según el barrio que contesten.
+
+En el primer turno el modelo habla **solo si el mensaje ya dice de qué zona son**. Si no
+lo dice (el caso más común: "hola, info para mi nena de 7"), sale únicamente la apertura
+y se espera la respuesta. Si lo dice, sale la presentación y el modelo sigue desde ahí,
+sin volver a saludar ni a preguntar la zona. Antes salían los dos mensajes de apertura
+*más* la respuesta del modelo, o sea cuatro mensajes de una con el saludo y la pregunta
+duplicados — la agencia lo marcó como atosigante el 03/08.
 
 **Canales.** Instagram DM (`/webhook`). El widget web (`/chat`) queda como banco de
 pruebas y por si más adelante lo quieren en el sitio. WhatsApp lo atiende Demián.
@@ -43,7 +50,7 @@ pruebas y por si más adelante lo quieren en el sitio. WhatsApp lo atiende Demi�
 | 3 | Piso de la escuela | Sala de 4. Con Sala de 3 avisa que todavía no la reciben y la invita para el año que viene, sin pasar precios ni derivar | `prompt.js` SALA DE 3: TODAVÍA NO |
 | 4 | Horario del WhatsApp | Fuera de 9-22 deriva igual pero no promete respuesta inmediata. Se mueve con `WSP_HORA_DESDE` / `WSP_HORA_HASTA` | `bot.js` `notaHorarioWsp()` |
 | 5 | Barrio → sede | Mapa de los barrios de CABA a la sede más cercana, con los barrios que tienen dos opciones marcados. Fuera de CABA aclara que las sedes son en Capital pero igual las menciona | `prompt.js` DE QUÉ BARRIO SON |
-| 6 | Primer mensaje con info | Sale igual la apertura y el bot sigue desde ahí. Si es solo un saludo (incluso "hola, cómo estás?"), sale la apertura y nada más | `bot.js` `esSoloSaludo()` |
+| 6 | Primer mensaje con info | El modelo habla en el primer turno solo si ya dijeron la zona. Si no, sale la apertura sola y se espera | `bot.js` `mencionaZona()` y `responder()` |
 | 7 | Qué edades NO cubre cada sede | Derivado de las tablas y escrito explícito, para que no ofrezca un grupo inexistente | `prompt.js` QUÉ SEDE ACEPTA QUÉ EDAD |
 | 8 | Cuándo se calla el bot en Instagram | Contesta siempre. Se puede restringir con `IG_BOT_START_HOUR` / `IG_BOT_END_HOUR` | `.env.example` |
 

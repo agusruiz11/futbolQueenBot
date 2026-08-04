@@ -3,7 +3,9 @@
 
 import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
-import { SYSTEM_PROMPT, MENSAJES_APERTURA } from './prompt.js';
+import {
+  SYSTEM_PROMPT, MENSAJES_APERTURA, BARRIOS_POR_SEDE, ZONAS_FUERA_DE_CABA,
+} from './prompt.js';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -128,31 +130,42 @@ export async function runBot(messages, { channel = 'web' } = {}) {
 
 // ─── Apertura ────────────────────────────────────────────────────────────────
 
-// Si el primer mensaje es solo un saludo, los tres mensajes de apertura ya lo
-// contestan todo y no hace falta molestar al modelo. Si trae información (edad,
-// zona, una pregunta), mandamos la apertura y dejamos que el modelo siga desde ahí.
-// Acepta el saludo pelado y también el saludo con cortesía ("hola, cómo estás?"),
-// que es como escribe casi todo el mundo. Si no lo contempláramos, el modelo
-// contestaría "todo bien por acá" y volvería a preguntar la zona que la apertura
-// ya preguntó.
-const SALUDO = '(hola+|holis|buenas|buen d[ií]a|buenas tardes|buenas noches|hey|hi|qu[eé] tal|qu[eé] onda)';
-const CORTESIA = '(c[oó]mo (est[aá]s|est[aá]n|and[aá]s|andan|va|les va|and[aá]n)|todo bien|todo ok)';
-const SEPARADOR = '[\\s\\p{P}\\p{S}]';
-const SALUDO_RE = new RegExp(
-  `^${SEPARADOR}*${SALUDO}(${SEPARADOR}+(${SALUDO}|${CORTESIA}))*${SEPARADOR}*$`,
-  'iu',
-);
+// La apertura tiene dos mensajes: la presentación y "De dónde son ustedes?". Casi
+// nadie escribe "hola" pelado: la mayoría arranca con la edad de la nena. Si en ese
+// caso mandáramos la apertura Y además dejáramos contestar al modelo, la familia
+// recibe cuatro mensajes de una, con el saludo y la pregunta de zona duplicados.
+// Así que el modelo habla en el primer turno solamente cuando ya no queda nada que
+// preguntar de la apertura, o sea cuando el primer mensaje ya dice de qué zona son.
 
-export function esSoloSaludo(texto) {
-  return SALUDO_RE.test((texto || '').trim());
+const sinAcentos = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+const ZONAS_CONOCIDAS = [
+  ...new Set([
+    ...Object.values(BARRIOS_POR_SEDE).flatMap((s) => s.barrios),
+    ...Object.keys(BARRIOS_POR_SEDE),
+    ...ZONAS_FUERA_DE_CABA,
+    'caba', 'capital', 'capital federal',
+  ]),
+].map(sinAcentos);
+
+// Detecta si el mensaje nombra un barrio, un partido del conurbano o una sede. Es a
+// propósito conservador: ante la duda decimos que no y la apertura pregunta la zona,
+// que es el peor caso tolerable. Lo intolerable es preguntar algo que ya nos dijeron.
+export function mencionaZona(texto) {
+  const t = sinAcentos(texto);
+  return ZONAS_CONOCIDAS.some((zona) => new RegExp(`(^|[^a-z])${zona}([^a-z]|$)`).test(t));
 }
 
 export async function responder(messages, { channel = 'web', esPrimeraRespuesta = false } = {}) {
   if (!esPrimeraRespuesta) return runBot(messages, { channel });
 
   const primerMensaje = messages.find((m) => m.role === 'user')?.content ?? '';
-  if (esSoloSaludo(primerMensaje)) return [...MENSAJES_APERTURA];
 
+  // Todavía no sabemos de dónde son: la apertura ya se los pregunta y con eso alcanza.
+  if (!mencionaZona(primerMensaje)) return [...MENSAJES_APERTURA];
+
+  // Ya nos dijeron la zona: sacamos la pregunta de la apertura, dejamos la
+  // presentación y que siga el modelo. Le recortamos un globo para no abrumar.
   const respuesta = await runBot(messages, { channel });
-  return [...MENSAJES_APERTURA, ...respuesta];
+  return [MENSAJES_APERTURA[0], ...respuesta.slice(0, Math.max(1, MAX_GLOBOS - 1))];
 }

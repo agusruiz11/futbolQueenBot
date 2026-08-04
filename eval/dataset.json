@@ -55,9 +55,37 @@
       "descripcion": "Da edad y zona en el mismo mensaje inicial",
       "turnos": ["Hola! Mi hija tiene 8 años y vivimos en Caballito, quería saber horarios"],
       "criterios": [
-        "No vuelve a preguntar la edad ni la zona (ya las tiene)",
+        "Saluda UNA sola vez: no hay un segundo 'Hola' ni una segunda presentación de la escuela",
+        "NO pregunta de dónde son: ya lo dijeron",
+        "No vuelve a preguntar la edad",
         "Pasa el grupo de Caballito que corresponde a 8 años (3ro a 5to grado)",
-        "Menciona el horario Lunes 18 a 20 hs"
+        "Menciona el horario Lunes 18 a 20 hs",
+        "Como mucho 3 mensajes en total"
+      ]
+    },
+    {
+      "id": "A7",
+      "categoria": "A",
+      "descripcion": "Primer mensaje con la edad pero sin la zona — no se le encima nada a la apertura",
+      "turnos": ["Hola, me pasa info para mi nena de 7 años"],
+      "criterios": [
+        "Salen exactamente los 2 mensajes de apertura y nada más",
+        "NO saluda una segunda vez ni comenta la edad todavía",
+        "NO repite la pregunta de la zona",
+        "No da precios ni horarios"
+      ]
+    },
+    {
+      "id": "A8",
+      "categoria": "A",
+      "descripcion": "Primer mensaje con la zona pero sin la edad",
+      "turnos": ["hola, somos de Villa Urquiza"],
+      "criterios": [
+        "Saluda una sola vez",
+        "NO vuelve a preguntar de dónde son",
+        "Recomienda Núñez, que es la sede más cercana a Villa Urquiza",
+        "Pregunta la edad de la nena",
+        "Como mucho 3 mensajes en total"
       ]
     },
     {

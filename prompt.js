@@ -2,6 +2,48 @@
 // Todo el conocimiento del negocio vive acá: no hay API ni tools. Si un dato no
 // está en este archivo, el bot NO lo sabe y tiene que decirlo.
 
+// Barrios de CABA mapeados a la sede más cercana. Están acá afuera y no escritos a
+// mano adentro del prompt porque el código también los usa: si el primer mensaje ya
+// dice de qué zona son, la apertura no vuelve a preguntarlo.
+export const BARRIOS_POR_SEDE = {
+  'VILLA CRESPO': {
+    direccion: 'Belaustegui 553',
+    barrios: ['Villa Crespo', 'Almagro', 'La Paternal', 'Villa Ortúzar', 'Parque Chas',
+      'Agronomía', 'Balvanera', 'Recoleta', 'Villa General Mitre', 'Villa Santa Rita',
+      'San Nicolás', 'Monserrat'],
+  },
+  COLEGIALES: {
+    direccion: 'Freire 761',
+    barrios: ['Colegiales', 'Chacarita', 'Palermo', 'Belgrano', 'Villa Ortúzar'],
+  },
+  NÚÑEZ: {
+    direccion: 'Padre Canavery 1351',
+    barrios: ['Núñez', 'Saavedra', 'Coghlan', 'Belgrano', 'Villa Urquiza', 'Villa Pueyrredón'],
+  },
+  CABALLITO: {
+    direccion: 'Galicia 1973',
+    barrios: ['Caballito', 'Flores', 'Floresta', 'Parque Chacabuco', 'Boedo', 'San Cristóbal',
+      'Almagro', 'Vélez Sarsfield', 'Villa Luro', 'Monte Castro', 'Villa Real', 'Versalles',
+      'Liniers', 'Mataderos', 'Parque Avellaneda', 'Villa Soldati', 'Villa Lugano',
+      'Villa Riachuelo', 'Nueva Pompeya', 'Barracas', 'Constitución', 'San Telmo', 'La Boca',
+      'Puerto Madero', 'Villa Devoto'],
+  },
+};
+
+// Zonas de afuera de CABA que la gente nombra al contestar de dónde es. No las
+// mapeamos a ninguna sede: solo sirven para saber que ya contestaron la pregunta.
+export const ZONAS_FUERA_DE_CABA = [
+  'provincia', 'gba', 'conurbano', 'zona norte', 'zona sur', 'zona oeste',
+  'Vicente López', 'Olivos', 'Florida', 'Munro', 'Martínez', 'San Isidro', 'Tigre',
+  'San Fernando', 'Boulogne', 'Beccar', 'San Martín', 'Villa Ballester', 'Tres de Febrero',
+  'Caseros', 'Ramos Mejía', 'Morón', 'Haedo', 'Ituzaingó', 'Castelar', 'La Matanza',
+  'Avellaneda', 'Lanús', 'Lomas de Zamora', 'Quilmes', 'Berazategui', 'La Plata',
+];
+
+const lineasBarrios = Object.entries(BARRIOS_POR_SEDE)
+  .map(([sede, { direccion, barrios }]) => `CERCA DE ${sede} (${direccion}): ${barrios.join(', ')}.`)
+  .join('\n');
+
 export const SYSTEM_PROMPT = `Sos la asistente de Fútbol Queens, una escuela de fútbol para niñas y adolescentes de 4 a 17 años con cuatro sedes en CABA. Atendés a mamás, papás y familias que escriben preguntando por la escuela.
 
 Tu objetivo NO es dar información: es calificar y avanzar hacia una clase de prueba. La información de horarios y precios es la herramienta, no el fin.
@@ -32,7 +74,13 @@ REGLAS DE FORMATO — son obligatorias, no son sugerencias:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━ EL FLUJO ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Los dos mensajes de apertura (saludo + pregunta de zona) ya se enviaron automáticamente antes de que vos entres. No los repitas, no vuelvas a saludar y no vuelvas a preguntar de dónde son: ya se lo preguntamos, esperá la respuesta.
+Antes de que vos entres ya se envió automáticamente la presentación: "Hola, cómo estás? 💜 Somos una escuela de fútbol para niñas y adolescentes de 4 a 17 años, con varias sedes en CABA."
+
+NUNCA vuelvas a saludar ni a presentarte. Nada de "Hola!", "Qué tal!" ni "Somos una escuela de...". La familia ya lo leyó hace dos segundos y repetirlo la abruma. Arrancá directo por donde va la conversación.
+
+Si la familia todavía no dijo de qué zona es, también se le envió automáticamente "De dónde son ustedes?". En ese caso no hablás vos: esperamos la respuesta.
+
+Si la familia ya dijo de qué zona es en su primer mensaje, entrás vos directamente y NO volvés a preguntar la zona. Recomendale la sede que le queda cerca y seguí con lo que falte.
 
 Antes de pasar CUALQUIER dato de horarios o precios tenés que confirmar dos cosas:
 
@@ -55,10 +103,7 @@ Si la zona que dice queda lejos de todas, no la descartes de una: decile igual c
 
 Cuando te digan el barrio, recomendale la sede más cercana. Si el barrio tiene dos sedes cerca, nombrale las dos y que elija.
 
-CERCA DE VILLA CRESPO (Belaustegui 553): Villa Crespo, Almagro, La Paternal, Villa Ortúzar, Parque Chas, Agronomía, Balvanera, Recoleta, Villa General Mitre, Villa Santa Rita, San Nicolás, Monserrat.
-CERCA DE COLEGIALES (Freire 761): Colegiales, Chacarita, Palermo, Belgrano, Villa Ortúzar.
-CERCA DE NÚÑEZ (Padre Canavery 1351): Núñez, Saavedra, Coghlan, Belgrano, Villa Urquiza, Villa Pueyrredón.
-CERCA DE CABALLITO (Galicia 1973): Caballito, Flores, Floresta, Parque Chacabuco, Boedo, San Cristóbal, Almagro, Vélez Sarsfield, Villa Luro, Monte Castro, Villa Real, Versalles, Liniers, Mataderos, Parque Avellaneda, Villa Soldati, Villa Lugano, Villa Riachuelo, Nueva Pompeya, Barracas, Constitución, San Telmo, La Boca, Puerto Madero, Villa Devoto.
+${lineasBarrios}
 
 Barrios con dos opciones: Belgrano (Núñez o Colegiales), Palermo (Colegiales o Villa Crespo), Chacarita (Colegiales o Villa Crespo), Villa Ortúzar (Colegiales o Villa Crespo), Almagro (Villa Crespo o Caballito), Villa Devoto (Caballito por Nazca, o Núñez si les queda mejor de transporte).
 

@@ -24,7 +24,7 @@ Abrí http://localhost:3000 para probarlo en un chat de prueba.
 | [bot.js](bot.js) | Núcleo: llamada al modelo y formato de salida (globos de chat, limpieza de `¿` y markdown) |
 | [server.js](server.js) | Endpoints: `/chat` para el widget web, `/webhook` para Instagram |
 | [BRIEF.md](BRIEF.md) | Lo que quedó definido, lo que decidí por mi cuenta y **las preguntas abiertas para la agencia** |
-| [eval/](eval/) | 51 casos de prueba en 11 categorías |
+| [eval/](eval/) | 53 casos de prueba en 11 categorías |
 
 No hay API externa ni tools: todo el conocimiento es estático y vive en `prompt.js`.
 Si un dato no está ahí, el bot no lo sabe y tiene que derivar al WhatsApp.
@@ -60,7 +60,7 @@ fuerzan por código en [bot.js](bot.js):
 
 ## Eval
 
-51 casos que cubren calificación, cobertura de sedes por edad, precios, derivación de
+53 casos que cubren calificación, cobertura de sedes por edad, precios, derivación de
 mayores de 18, matrícula, combinaciones, anti-alucinación, formato, multi-turno,
 derivación al WhatsApp (categoría J: Sala de 4 como piso y el link con resumen) y
 recomendación de sede según el barrio (categoría K).
