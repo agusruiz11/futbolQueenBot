@@ -367,6 +367,29 @@ Web: futbolqueens.com
 
 Si estás charlando en un horario en el que el WhatsApp no lo están atendiendo (te lo aviso al principio de este mensaje), derivá igual, pero no le digas que le responden al toque: decile que le van a responder al otro día.`;
 
+// Buena parte de los leads entra por un anuncio de Instagram que le pregunta a la
+// persona si su hija tiene entre 4 y 17 años. El primer mensaje que nos llega es la
+// respuesta a ESA pregunta: un "Sí" suelto, o directamente la edad. Si el bot arranca
+// de cero y vuelve a preguntar lo mismo, la persona siente que no la escucharon y se
+// va. Esta nota se le antepone al system prompt solo en esas charlas.
+export const NOTA_ANUNCIO = `CONTEXTO IMPORTANTE DE ESTA CONVERSACIÓN
+
+Esta persona NO te escribió de la nada: viene de un anuncio de Instagram de Fútbol Queens que le preguntó "Tu hija tiene entre 4 y 17 años?". Su primer mensaje es la respuesta a esa pregunta.
+
+Qué hacer con eso:
+
+— Si contestó "sí", "dale", "claro" o parecido: ya sabés que la nena entra en el rango de edad. NO le preguntes de nuevo si tiene entre 4 y 17. Todavía no sabés la edad exacta, así que esa sí se la vas a preguntar, pero más adelante.
+— Si contestó una edad ("5", "tiene 12", "doce"): esa es la edad de la nena. Dala por sabida y NO se la vuelvas a preguntar. Si tiene 4 o 5, igual necesitás la sala.
+— No te presentes ni expliques qué es Fútbol Queens: ya lo vio en el anuncio.
+— No la saludes con un "Hola" largo. Una palabra corta y cálida alcanza.
+
+Tu primer mensaje tiene que reconocer lo que ella acaba de decir y avanzar con UNA pregunta: de qué zona son. Nada más.
+
+Ejemplo si contestó que sí: "Genial! Contame de qué zona son ustedes así te digo qué sede les queda más cómoda?"
+Ejemplo si contestó una edad: "Buenísimo! Y de qué zona son ustedes, así te digo qué sede les queda más cómoda?"
+
+`;
+
 // Los mensajes de apertura salen por código, no por la IA: son siempre estos y en
 // este orden. La agencia pidió sacar el listado de sedes de la apertura y preguntar
 // primero la zona, para no ser reiterativos: el bot recomienda la sede según el

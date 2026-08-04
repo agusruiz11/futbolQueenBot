@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
 import {
-  SYSTEM_PROMPT, MENSAJES_APERTURA, BARRIOS_POR_SEDE, ZONAS_FUERA_DE_CABA,
+  SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, ZONAS_FUERA_DE_CABA,
 } from './prompt.js';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -99,9 +99,10 @@ function notaHorarioWsp(hora) {
 }
 
 // Devuelve un array de globos de chat listos para enviar.
-export async function runBot(messages, { channel = 'web' } = {}) {
+export async function runBot(messages, { channel = 'web', origen = null } = {}) {
   const { fecha, hora } = ahora();
-  const system = `Hoy es ${fecha} y son las ${String(hora).padStart(2, '0')} hs. ${notaHorarioWsp(hora)}\n\n${SYSTEM_PROMPT}`;
+  const contexto = origen === 'anuncio' ? NOTA_ANUNCIO : '';
+  const system = `Hoy es ${fecha} y son las ${String(hora).padStart(2, '0')} hs. ${notaHorarioWsp(hora)}\n\n${contexto}${SYSTEM_PROMPT}`;
 
   const response = await client.beta.messages.create({
     model: MODEL,
@@ -156,10 +157,52 @@ export function mencionaZona(texto) {
   return ZONAS_CONOCIDAS.some((zona) => new RegExp(`(^|[^a-z])${zona}([^a-z]|$)`).test(t));
 }
 
-export async function responder(messages, { channel = 'web', esPrimeraRespuesta = false } = {}) {
-  if (!esPrimeraRespuesta) return runBot(messages, { channel });
+// ─── Leads que vienen del anuncio ────────────────────────────────────────────
 
+// El anuncio de Instagram pregunta "Tu hija tiene entre 4 y 17 años?", así que el
+// primer mensaje del lead es la respuesta: un "sí" pelado o la edad sola. Meta manda
+// un referral en el webhook cuando la charla arranca desde un anuncio, pero no
+// siempre llega, así que además lo deducimos de la forma del mensaje.
+
+const AFIRMACIONES = ['si', 'sisi', 'sip', 'simon', 'dale', 'claro', 'obvio', 'correcto',
+  'exacto', 'asi es', 'ok', 'oka', 'okey', 'yes', 'siii', 'sii'];
+
+const NUMEROS_EN_LETRAS = {
+  tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10,
+  once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17,
+};
+
+const soloLetrasYNumeros = (t) => sinAcentos(t).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+// "sí", "dale", "5", "tiene 5", "cinco años": todos son respuestas al anuncio y
+// ninguno tiene sentido como primer mensaje espontáneo a una escuela de fútbol.
+export function esRespuestaDeAnuncio(texto) {
+  const t = soloLetrasYNumeros(texto);
+  if (!t) return false;
+  if (AFIRMACIONES.includes(t.replace(/\s/g, ''))) return true;
+
+  const palabras = t.split(' ');
+  if (palabras.length > 4) return false;
+  const edad = palabras.map((p) => (NUMEROS_EN_LETRAS[p] ?? Number(p)))
+    .find((n) => Number.isInteger(n) && n >= 3 && n <= 17);
+  return edad !== undefined;
+}
+
+export async function responder(
+  messages,
+  { channel = 'web', esPrimeraRespuesta = false, origen = null } = {},
+) {
   const primerMensaje = messages.find((m) => m.role === 'user')?.content ?? '';
+  const deAnuncio = origen === 'anuncio'
+    || (esPrimeraRespuesta && esRespuestaDeAnuncio(primerMensaje));
+
+  if (!esPrimeraRespuesta) {
+    return runBot(messages, { channel, origen: deAnuncio ? 'anuncio' : null });
+  }
+
+  // Viene del anuncio: la presentación sobra, ya la vio ahí. Contesta el modelo,
+  // que tiene que reconocer lo que dijo y seguir desde ese punto.
+  if (deAnuncio) return runBot(messages, { channel, origen: 'anuncio' });
 
   // Todavía no sabemos de dónde son: la apertura ya se los pregunta y con eso alcanza.
   if (!mencionaZona(primerMensaje)) return [...MENSAJES_APERTURA];

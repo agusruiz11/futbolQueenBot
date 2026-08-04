@@ -61,7 +61,7 @@ function getIgSession(senderId) {
   const now = Date.now();
   let s = igSessions.get(senderId);
   if (!s || now - s.updatedAt > SESSION_TTL_MS) {
-    s = { messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0 };
+    s = { messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0, origen: null };
     igSessions.set(senderId, s);
   }
   return s;
@@ -188,17 +188,23 @@ async function igSendSequence(recipientId, globos) {
   }
 }
 
-async function handleIgMessage(senderId, text) {
-  console.log(`[ig] Procesando mensaje de ${senderId}: "${text}"`);
+async function handleIgMessage(senderId, text, { deAnuncio = false } = {}) {
+  console.log(`[ig] Procesando mensaje de ${senderId}: "${text}"${deAnuncio ? ' (viene del anuncio)' : ''}`);
   const session = getIgSession(senderId);
   const esPrimeraRespuesta = !session.messages.some((m) => m.role === 'assistant');
+
+  // El referral llega una sola vez, en el mensaje que abre la charla: nos lo
+  // guardamos para que el resto de la conversación siga sabiendo de dónde vino.
+  if (deAnuncio) session.origen = 'anuncio';
 
   session.messages.push({ role: 'user', content: text });
   if (session.messages.length > 40) session.messages = session.messages.slice(-40);
 
   let globos;
   try {
-    globos = await responder(session.messages, { channel: 'instagram', esPrimeraRespuesta });
+    globos = await responder(session.messages, {
+      channel: 'instagram', esPrimeraRespuesta, origen: session.origen,
+    });
   } catch (err) {
     console.error('[ig] responder error:', err.message);
     const now = Date.now();
@@ -217,6 +223,17 @@ async function handleIgMessage(senderId, text) {
 
   console.log(`[ig] Enviando ${globos.length} mensajes (pausa ~${IG_MSG_DELAY_MS}ms ±${IG_MSG_JITTER_MS}ms)`);
   await igSendSequence(senderId, globos);
+}
+
+// Cuando la charla arranca desde un anuncio, Meta adjunta un referral con source
+// "ADS" y el ad_id. Según el tipo de anuncio viene colgado del evento o del mensaje,
+// así que miramos los dos lugares. Si Meta no lo manda, bot.js igual deduce el
+// origen por la forma del primer mensaje ("sí" pelado, o una edad sola).
+function vieneDeAnuncio(event) {
+  const refs = [event?.referral, event?.message?.referral, event?.postback?.referral];
+  return refs.some((r) => r && (
+    String(r.source || '').toUpperCase() === 'ADS' || r.ad_id || r.ads_context_data
+  ));
 }
 
 // Valida que el webhook venga realmente de Meta (firma HMAC con el App Secret)
@@ -269,6 +286,10 @@ app.post('/webhook', (req, res) => {
       for (const event of events) {
         const senderId = event?.sender?.id;
         const recipientId = event?.recipient?.id;
+        // El referral puede llegar en un evento propio, sin mensaje. Dejamos marcada
+        // la sesión para que el mensaje que venga después ya se trate como del anuncio.
+        if (senderId && vieneDeAnuncio(event)) getIgSession(senderId).origen = 'anuncio';
+
         const msg = event?.message;
         if (!msg) continue;
 
@@ -305,7 +326,8 @@ app.post('/webhook', (req, res) => {
           continue;
         }
 
-        handleIgMessage(senderId, msg.text).catch((err) => console.error('[ig] handle error:', err.message));
+        handleIgMessage(senderId, msg.text, { deAnuncio: vieneDeAnuncio(event) })
+          .catch((err) => console.error('[ig] handle error:', err.message));
       }
     }
   } catch (err) {

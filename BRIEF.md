@@ -51,6 +51,7 @@ pruebas y por si más adelante lo quieren en el sitio. WhatsApp lo atiende Demi�
 | 4 | Horario del WhatsApp | Fuera de 9-22 deriva igual pero no promete respuesta inmediata. Se mueve con `WSP_HORA_DESDE` / `WSP_HORA_HASTA` | `bot.js` `notaHorarioWsp()` |
 | 5 | Barrio → sede | Mapa de los barrios de CABA a la sede más cercana, con los barrios que tienen dos opciones marcados. Fuera de CABA aclara que las sedes son en Capital pero igual las menciona | `prompt.js` DE QUÉ BARRIO SON |
 | 6 | Primer mensaje con info | El modelo habla en el primer turno solo si ya dijeron la zona. Si no, sale la apertura sola y se espera | `bot.js` `mencionaZona()` y `responder()` |
+| 9 | **Leads que entran por el anuncio** de Instagram, que pregunta "Tu hija tiene entre 4 y 17 años?" | El primer mensaje es la respuesta a esa pregunta ("Sí" pelado, o la edad). No sale la presentación enlatada: contesta el modelo con una nota extra que le explica de dónde viene la persona, para que no vuelva a preguntar lo que ya contestó | `prompt.js` `NOTA_ANUNCIO` · `bot.js` `esRespuestaDeAnuncio()` · `server.js` `vieneDeAnuncio()` |
 | 7 | Qué edades NO cubre cada sede | Derivado de las tablas y escrito explícito, para que no ofrezca un grupo inexistente | `prompt.js` QUÉ SEDE ACEPTA QUÉ EDAD |
 | 8 | Cuándo se calla el bot en Instagram | Contesta siempre. Se puede restringir con `IG_BOT_START_HOUR` / `IG_BOT_END_HOUR` | `.env.example` |
 

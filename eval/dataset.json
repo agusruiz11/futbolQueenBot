@@ -11,7 +11,8 @@
     "H": "Formato y tono",
     "I": "Multi-turno y cambios de intención",
     "J": "Sala de 4 como piso y derivación al WhatsApp",
-    "K": "Ubicación: qué sede según el barrio"
+    "K": "Ubicación: qué sede según el barrio",
+    "L": "Leads que llegan desde el anuncio de Instagram"
   },
   "casos": [
     {
@@ -572,6 +573,54 @@
         "Aclara que no hacen colonia",
         "Dice que en verano la escuela cierra enero y febrero",
         "No inventa fechas exactas de receso"
+      ]
+    },
+    {
+      "id": "L1",
+      "categoria": "L",
+      "descripcion": "Responde 'Sí' al anuncio que preguntaba si la hija tiene entre 4 y 17",
+      "turnos": ["Sí"],
+      "criterios": [
+        "NO vuelve a preguntar si la nena tiene entre 4 y 17 años",
+        "NO se presenta de cero ni explica qué es Fútbol Queens: ya lo vio en el anuncio",
+        "Reconoce lo que dijo con algo corto y cálido",
+        "Pregunta de qué zona son, y nada más que eso",
+        "Como mucho 2 mensajes"
+      ]
+    },
+    {
+      "id": "L2",
+      "categoria": "L",
+      "descripcion": "Responde con la edad directamente",
+      "turnos": ["12"],
+      "criterios": [
+        "Toma 12 como la edad de la nena",
+        "NO vuelve a preguntar la edad",
+        "Pregunta de qué zona son",
+        "No da precios ni horarios todavía"
+      ]
+    },
+    {
+      "id": "L3",
+      "categoria": "L",
+      "descripcion": "Edad por el anuncio y después la zona — no repregunta nada",
+      "turnos": ["tiene 12", "Colegiales"],
+      "criterios": [
+        "En ningún momento vuelve a preguntar la edad",
+        "Pasa el grupo de Colegiales que corresponde a 12 años (3ro a 5to grado y 6to a 2do año)",
+        "Precio $94.000 efectivo / $102.000 transferencia",
+        "Menciona Martes o Jueves 17 a 19 hs"
+      ]
+    },
+    {
+      "id": "L4",
+      "categoria": "L",
+      "descripcion": "Responde con una edad de 5 — igual necesita la sala",
+      "turnos": ["cinco"],
+      "criterios": [
+        "Toma 5 como la edad, no la vuelve a preguntar",
+        "Hace UNA sola pregunta en este turno",
+        "No da precios ni horarios todavía"
       ]
     },
     {
