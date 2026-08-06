@@ -9,7 +9,10 @@
       "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node -e \"import\\('./bot.js'\\).then\\(m=>console.log\\('link:', m.linkWsp\\('Hola! Soy la mama de Delfi, sala de 4, sede Villa Crespo.'\\)\\)\\)\")",
       "Bash(gh repo *)",
       "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node \"/tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/832e61f0-9e0a-4763-b051-9d085eaa6a96/scratchpad/saludo.mjs\")",
-      "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node \"/tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/832e61f0-9e0a-4763-b051-9d085eaa6a96/scratchpad/anuncio.mjs\")"
+      "Bash(ANTHROPIC_API_KEY=sk-ant-dummy node \"/tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/832e61f0-9e0a-4763-b051-9d085eaa6a96/scratchpad/anuncio.mjs\")",
+      "Bash(sed -n '/function isBotActiveNow/,/^}/p' server.js)",
+      "Bash(sed -n '/function horaLocal/,/^}/p' server.js)",
+      "Bash(curl -s \"https://graph.instagram.com/v21.0/me?fields=id,username&access_token=IGAAWHNvMSLY1BZAGJ1YTJCd1VNM3BhVS1pUVpzLWhQdG03WTd2eHVSR3FjdWYzS0VXdy1wMGR6ZAThUUjFpaUpCVElKR3U4aEYtZAnhjNHFmYWpManp1aGJsblZAjUzZAEVjhaUFNFS2FtRDUwREx6VEJDak50dC1GYy01R3Y1OEdMWQZDZD\")"
     ]
   }
 }

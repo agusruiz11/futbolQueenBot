@@ -110,8 +110,11 @@ function chunkText(text, max = 950) {
   return chunks;
 }
 
+// La app usa Instagram API con Instagram Login: los tokens arrancan con IGAA y
+// van contra graph.instagram.com. graph.facebook.com no los sabe leer y responde
+// "Cannot parse access token" (code 190), que parece un token vencido y no lo es.
 async function igSend(recipientId, message) {
-  const base = process.env.IG_GRAPH_BASE || 'https://graph.facebook.com/v21.0';
+  const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
   const token = process.env.IG_ACCESS_TOKEN;
   if (!token) { console.error('[ig] Falta IG_ACCESS_TOKEN — no puedo responder'); return; }
 
@@ -150,7 +153,7 @@ function humanDelay() {
 
 async function igSendAction(recipientId, action) {
   if (!IG_TYPING) return;
-  const base = process.env.IG_GRAPH_BASE || 'https://graph.facebook.com/v21.0';
+  const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
   const token = process.env.IG_ACCESS_TOKEN;
   if (!token) return;
   try {
