@@ -16,6 +16,11 @@ import { responder } from '../bot.js';
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// El link corto esconde el resumen de la derivación detrás de un id, y el juez
+// necesita leerlo para calificarlo. Acá forzamos el link largo, que lo trae en
+// el parámetro text=.
+delete process.env.PUBLIC_BASE_URL;
+
 const JUEZ_MODEL = process.env.EVAL_JUDGE_MODEL || 'claude-opus-5';
 const CONCURRENCIA = Number(process.env.EVAL_CONCURRENCY ?? 4);
 

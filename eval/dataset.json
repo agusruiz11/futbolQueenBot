@@ -511,7 +511,7 @@
       "descripcion": "Derivación con resumen — el link sale bien armado",
       "turnos": ["hola", "Núñez, tiene 10 años", "genial, quiero coordinar la prueba"],
       "criterios": [
-        "La respuesta incluye un link que empieza con https://api.whatsapp.com/send/?phone=5491123947419",
+        "La respuesta incluye un link que empieza con https://wa.me/5491123947419",
         "El link trae el parámetro text= con un resumen de la charla (edad o grado de la nena y la sede de Núñez)",
         "El resumen está escrito en primera persona, como si lo mandara la familia",
         "El link va en su propio globo, sin la marca [[WSP: ]] visible en el texto",

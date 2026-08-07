@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import {
   SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, ZONAS_FUERA_DE_CABA,
 } from './prompt.js';
+import { guardarResumen } from './wsp-links.js';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -15,17 +16,32 @@ export const FALLBACK_MSG = `Perdón, se me complicó procesar tu consulta. Escr
 // El bot cierra derivando al WhatsApp que atiende Demián, con el resumen de la
 // charla ya escrito en el chat. El modelo no arma la URL: escribe [[WSP: resumen]]
 // y la reemplazamos acá, porque el url-encoding a mano lo rompe seguido.
-export const WSP_BASE =
-  'https://api.whatsapp.com/send/?phone=5491123947419&type=phone_number&app_absent=0';
+const WSP_TELEFONO = process.env.WSP_TELEFONO || '5491123947419';
 
 const RESUMEN_POR_DEFECTO =
   'Hola! Vengo del Instagram de Futbol Queens y quiero coordinar una clase de prueba.';
 
 const WSP_MARCA_RE = /\[\[\s*WSP\s*:\s*([\s\S]*?)\]\]/g;
 
+// El destino final: abre el chat de WhatsApp con el texto ya escrito. Es el link
+// al que redirige el short link, y el que mandamos tal cual si no hay dominio
+// propio configurado.
+export function linkWspLargo(resumen = '') {
+  const texto = resumen.trim() || RESUMEN_POR_DEFECTO;
+  return `https://wa.me/${WSP_TELEFONO}?text=${encodeURIComponent(texto)}`;
+}
+
+// Instagram no renderiza markdown ni acorta URLs: el link largo se ve como un
+// bloque de %20 de veinte líneas. Con PUBLIC_BASE_URL definido mandamos en su
+// lugar un /w/xxxxxxx propio, que server.js resuelve y redirige.
+//
+// Se lee en cada llamada, no al importar el módulo: el eval lo apaga en caliente
+// para poder leer el resumen, que el link corto esconde.
 export function linkWsp(resumen = '') {
   const texto = resumen.trim() || RESUMEN_POR_DEFECTO;
-  return `${WSP_BASE}&text=${encodeURIComponent(texto)}`;
+  const base = (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, '');
+  if (!base) return linkWspLargo(texto);
+  return `${base}/w/${guardarResumen(texto)}`;
 }
 
 export function insertarLinkWsp(texto) {

@@ -2,5 +2,6 @@ node_modules/
 .env
 .env.local
 eval/results/*.json
+data/
 *.log
 .DS_Store

@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
-import { responder, FALLBACK_MSG, BOT_CONFIG } from './bot.js';
+import { responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo } from './bot.js';
+import { buscarResumen } from './wsp-links.js';
 
 const app = express();
 
@@ -17,6 +18,19 @@ app.use((req, res, next) => {
 // Guardamos el body crudo para validar la firma de los webhooks de Meta
 app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.static('public'));
+
+// ─── Short link de derivación al WhatsApp ────────────────────────────────────
+// El bot manda /w/xxxxxxx en vez de la URL de WhatsApp con el resumen encodeado.
+// Si el id no está (redeploy que se llevó el disco), redirigimos igual con el
+// mensaje por defecto: la familia llega al chat, solo que sin el resumen escrito.
+
+app.get('/w/:id', (req, res) => {
+  const resumen = buscarResumen(req.params.id);
+  if (resumen) console.log(`[w] Abren el link ${req.params.id}`);
+  else console.warn(`[w] Id desconocido ${req.params.id} — mando el mensaje por defecto`);
+  res.set('Cache-Control', 'no-store'); // el id es de un solo lead, no se cachea
+  res.redirect(302, linkWspLargo(resumen || ''));
+});
 
 // ─── Chat endpoint (widget web) ──────────────────────────────────────────────
 
@@ -348,4 +362,7 @@ app.listen(PORT, () => {
     ? `${process.env.IG_BOT_START_HOUR}:00–${process.env.IG_BOT_END_HOUR}:00 (${IG_TZ})`
     : 'siempre activo';
   console.log(`[ig] Canal Instagram: ${(process.env.IG_ENABLED || 'true') === 'false' ? 'APAGADO' : ventana}`);
+  console.log(`[wsp] Link de derivación: ${process.env.PUBLIC_BASE_URL
+    ? `corto (${process.env.PUBLIC_BASE_URL.replace(/\/+$/, '')}/w/...)`
+    : 'LARGO — definí PUBLIC_BASE_URL para acortarlo'}`);
 });

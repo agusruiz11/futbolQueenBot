@@ -23,6 +23,7 @@ Abrí http://localhost:3000 para probarlo en un chat de prueba.
 | [prompt.js](prompt.js) | Todo el conocimiento del negocio: sedes, grupos, horarios, precios, reglas. **Es el archivo que se toca cuando cambia algo del cliente.** |
 | [bot.js](bot.js) | Núcleo: llamada al modelo y formato de salida (globos de chat, limpieza de `¿` y markdown) |
 | [server.js](server.js) | Endpoints: `/chat` para el widget web, `/webhook` para Instagram |
+| [wsp-links.js](wsp-links.js) | Short links de derivación al WhatsApp (`/w/:id`) |
 | [BRIEF.md](BRIEF.md) | Lo que quedó definido, lo que decidí por mi cuenta y **las preguntas abiertas para la agencia** |
 | [eval/](eval/) | 57 casos de prueba en 11 categorías |
 
@@ -45,6 +46,36 @@ Responde con un array de globos, para renderizarlos de a uno:
 
 **`GET|POST /webhook`** — Instagram DM. El `GET` es el handshake de verificación de
 Meta; el `POST` recibe los mensajes.
+
+**`GET /w/:id`** — short link de derivación. Redirige al WhatsApp con el resumen de
+la charla ya escrito. Ver abajo.
+
+## El link de WhatsApp
+
+El bot cierra derivando al WhatsApp con un resumen de la charla ya redactado. El
+modelo no escribe la URL: escribe la marca `[[WSP: resumen]]` y
+[wsp-links.js](wsp-links.js) la reemplaza.
+
+El resumen metido en la URL queda url-encodeado, y en el DM de Instagram —que no
+renderiza markdown ni acorta nada— se ve como un muro de `%20` de veinte líneas.
+Por eso guardamos el resumen del lado del server y mandamos un link corto propio:
+
+```
+https://futbolqueens.com/w/5zpJXPJ          →  34 caracteres
+https://wa.me/549...?text=Hola!%20Vengo...  →  274 caracteres
+```
+
+Se activa con `PUBLIC_BASE_URL`. **Sin esa variable el bot sigue mandando el link
+largo**, así que si el link se ve feo en producción, eso es lo primero que hay que
+mirar: al arrancar se loguea como `[wsp] Link de derivación: ...`.
+
+Los resúmenes viven en memoria y se persisten best-effort en `WSP_LINKS_FILE`. En
+Railway el filesystem es efímero: si un redeploy se los lleva, el link igual abre
+el WhatsApp con el mensaje por defecto en vez de tirar un 404 — la familia llega,
+solo que sin el resumen. Para que sobrevivan, montá un volumen en esa ruta.
+
+El eval fuerza el link largo ([run-eval.js](eval/run-eval.js)): el juez necesita
+leer el resumen para calificarlo, y el link corto lo esconde.
 
 ## Formato de las respuestas
 
