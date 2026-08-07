@@ -118,7 +118,14 @@ testers.
 Variables en `.env`: `IG_VERIFY_TOKEN`, `IG_ACCESS_TOKEN`, `IG_APP_SECRET`.
 
 El bot detecta si alguien del equipo contesta a mano en un chat y se calla en esa
-conversación por 2 horas, para no pisar la respuesta humana.
+conversación por 2 horas, para no pisar la respuesta humana. **La pausa es por
+conversación**: el resto de los chats sigue contestando normal.
+
+La gente escribe como habla: manda una idea partida en varios mensajes ("16",
+después "Años"). Cada uno llega en su propio webhook, así que el bot espera
+`IG_AGRUPAR_MS` a que termine de escribir y contesta una sola vez a todo junto.
+Sin eso arranca una respuesta por mensaje, corren en paralelo sobre casi el mismo
+historial y salen dos respuestas casi iguales seguidas.
 
 Por defecto contesta a toda hora. Para que cubra solo la noche y una persona atienda
 de día, definí `IG_BOT_START_HOUR` y `IG_BOT_END_HOUR`.

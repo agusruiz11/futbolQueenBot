@@ -32,7 +32,12 @@
       "Bash(rm -f /tmp/claude-1000/demo.json)",
       "Bash(PUBLIC_BASE_URL=http://localhost:3999 node -e ' *)",
       "Bash(PORT=3999 PUBLIC_BASE_URL=\"http://localhost:3999\" IG_ENABLED=false node server.js)",
-      "Bash(curl -s -o /dev/null -w \"status: %{http_code}\\\\nredirige a: %{redirect_url}\\\\n\" \"http://localhost:3999/w/XHC0D54\")"
+      "Bash(curl -s -o /dev/null -w \"status: %{http_code}\\\\nredirige a: %{redirect_url}\\\\n\" \"http://localhost:3999/w/XHC0D54\")",
+      "Bash(kill 27047)",
+      "Bash(curl -s -m 2 -o /dev/null http://localhost:3999/)",
+      "Bash(timeout 60 node /tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/c7a40679-f95f-4f8f-bde5-fcde5cfd68bb/scratchpad/test-agrupar.mjs \"$\\(pwd\\)/server.js\")",
+      "Bash(cp /tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/c7a40679-f95f-4f8f-bde5-fcde5cfd68bb/scratchpad/test-agrupar.mjs ./tmp-test-agrupar.mjs)",
+      "Bash(timeout 60 node ./tmp-test-agrupar.mjs \"$\\(pwd\\)/server.js\")"
     ]
   }
 }

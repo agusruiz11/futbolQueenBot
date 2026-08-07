@@ -75,7 +75,10 @@ function getIgSession(senderId) {
   const now = Date.now();
   let s = igSessions.get(senderId);
   if (!s || now - s.updatedAt > SESSION_TTL_MS) {
-    s = { messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0, origen: null };
+    s = {
+      messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0, origen: null,
+      pendientes: [], timerAgrupar: null, respondiendo: false,
+    };
     igSessions.set(senderId, s);
   }
   return s;
@@ -205,15 +208,67 @@ async function igSendSequence(recipientId, globos) {
   }
 }
 
-async function handleIgMessage(senderId, text, { deAnuncio = false } = {}) {
-  console.log(`[ig] Procesando mensaje de ${senderId}: "${text}"${deAnuncio ? ' (viene del anuncio)' : ''}`);
-  const session = getIgSession(senderId);
-  const esPrimeraRespuesta = !session.messages.some((m) => m.role === 'assistant');
+// La gente escribe como habla: "16" / "Años", o la pregunta partida en dos.
+// Cada mensaje llega en su propio webhook, y si arrancamos una respuesta por cada
+// uno el modelo corre dos veces en paralelo sobre casi el mismo historial y manda
+// dos respuestas parecidas seguidas. Esperamos un ratito a que termine de escribir
+// y le contestamos una sola vez a todo junto.
+const IG_AGRUPAR_MS = Number(process.env.IG_AGRUPAR_MS ?? 2500);
 
-  // El referral llega una sola vez, en el mensaje que abre la charla: nos lo
-  // guardamos para que el resto de la conversación siga sabiendo de dónde vino.
+function encolarIgMessage(senderId, text, { deAnuncio = false } = {}) {
+  const session = getIgSession(senderId);
+  session.pendientes = session.pendientes || [];
+  session.pendientes.push(text);
   if (deAnuncio) session.origen = 'anuncio';
 
+  // Mostramos "escribiendo…" ya: si no, durante la espera parece que no lo leímos.
+  if (session.pendientes.length === 1) igSendAction(senderId, 'typing_on');
+
+  clearTimeout(session.timerAgrupar);
+  session.timerAgrupar = setTimeout(() => {
+    handleIgMessage(senderId).catch((err) => console.error('[ig] handle error:', err.message));
+  }, IG_AGRUPAR_MS);
+}
+
+async function handleIgMessage(senderId) {
+  const session = getIgSession(senderId);
+
+  // Si todavía estamos respondiendo lo anterior, no arrancamos otra respuesta en
+  // paralelo: lo que llegó queda encolado y sale cuando la primera termine.
+  if (session.respondiendo) return;
+
+  // Pudo haber contestado alguien del equipo durante la espera: lo rechequeamos
+  // acá, no alcanza con el chequeo de cuando entró el mensaje.
+  if (session.humanUntil && Date.now() < session.humanUntil) {
+    console.log(`[webhook] Charla con ${senderId} pausada por handoff humano`);
+    session.pendientes = [];
+    return;
+  }
+
+  const textos = session.pendientes || [];
+  if (!textos.length) return;
+  session.pendientes = [];
+
+  // Los mensajes seguidos son una sola idea partida en varios envíos: se los
+  // pasamos al modelo como un único turno, que es como los leería una persona.
+  const text = textos.join('\n');
+  console.log(`[ig] Procesando mensaje de ${senderId}: "${text}"${textos.length > 1 ? ` (${textos.length} mensajes agrupados)` : ''}${session.origen === 'anuncio' ? ' (viene del anuncio)' : ''}`);
+
+  const esPrimeraRespuesta = !session.messages.some((m) => m.role === 'assistant');
+  session.respondiendo = true;
+  try {
+    await responderIg(senderId, session, text, esPrimeraRespuesta);
+  } finally {
+    session.respondiendo = false;
+  }
+
+  // Llegó algo mientras contestábamos: lo atendemos ahora, sin volver a esperar.
+  if (session.pendientes.length) {
+    await handleIgMessage(senderId).catch((err) => console.error('[ig] handle error:', err.message));
+  }
+}
+
+async function responderIg(senderId, session, text, esPrimeraRespuesta) {
   session.messages.push({ role: 'user', content: text });
   if (session.messages.length > 40) session.messages = session.messages.slice(-40);
 
@@ -318,6 +373,9 @@ app.post('/webhook', (req, res) => {
           if (recipientId) {
             const session = getIgSession(recipientId);
             session.humanUntil = Date.now() + HUMAN_HANDOFF_MS;
+            // Lo que estaba esperando para salir ya no sale: contesta la persona.
+            clearTimeout(session.timerAgrupar);
+            session.pendientes = [];
             console.log(`[webhook] Respuesta manual detectada para ${recipientId} — pauso ${HUMAN_HANDOFF_MS / 60000} min`);
           }
           continue;
@@ -343,8 +401,7 @@ app.post('/webhook', (req, res) => {
           continue;
         }
 
-        handleIgMessage(senderId, msg.text, { deAnuncio: vieneDeAnuncio(event) })
-          .catch((err) => console.error('[ig] handle error:', err.message));
+        encolarIgMessage(senderId, msg.text, { deAnuncio: vieneDeAnuncio(event) });
       }
     }
   } catch (err) {
