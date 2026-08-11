@@ -81,8 +81,8 @@ export function separarEnGlobos(texto) {
 
 // ─── Llamada al modelo ───────────────────────────────────────────────────────
 
-const MODEL = process.env.BOT_MODEL || 'claude-opus-5';
-const EFFORT = process.env.BOT_EFFORT || 'medium';
+const MODEL = process.env.BOT_MODEL || 'claude-sonnet-5';
+const EFFORT = process.env.BOT_EFFORT || 'low';
 // Si los clasificadores de seguridad rechazan un pedido, la API lo reintenta sola
 // en otro modelo en vez de devolvernos la conversación cortada. Para este bot el
 // riesgo de rechazo es prácticamente nulo, así que si la beta no está habilitada
@@ -118,7 +118,19 @@ function notaHorarioWsp(hora) {
 export async function runBot(messages, { channel = 'web', origen = null } = {}) {
   const { fecha, hora } = ahora();
   const contexto = origen === 'anuncio' ? NOTA_ANUNCIO : '';
-  const system = `Hoy es ${fecha} y son las ${String(hora).padStart(2, '0')} hs. ${notaHorarioWsp(hora)}\n\n${contexto}${SYSTEM_PROMPT}`;
+
+  // El prompt estable va primero y con cache_control: son ~5k tokens que antes se
+  // mandaban enteros en cada mensaje, y así las lecturas salen a 0,1x del precio.
+  // Todo lo que cambia (la hora, el contexto de anuncio) va DESPUÉS del breakpoint:
+  // si fuera antes —como estaba— el prefijo cambiaría cada hora y el cache no
+  // pegaría nunca.
+  const system = [
+    { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+    {
+      type: 'text',
+      text: `${contexto}Hoy es ${fecha} y son las ${String(hora).padStart(2, '0')} hs. ${notaHorarioWsp(hora)}`,
+    },
+  ];
 
   const response = await client.beta.messages.create({
     model: MODEL,

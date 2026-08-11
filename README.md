@@ -132,8 +132,14 @@ de día, definí `IG_BOT_START_HOUR` y `IG_BOT_END_HOUR`.
 
 ## Modelo
 
-`claude-opus-5` con effort `medium`. El effort importa acá: la tabla de precios tiene
-grupos que se superponen y sedes que no cubren todas las edades, así que bajarlo a
-`low` arriesga errores de matching. Ambos son configurables por `.env`
-(`BOT_MODEL`, `BOT_EFFORT`) si hace falta mover el balance de costo.
+`claude-sonnet-5` con effort `low`, configurables por `.env` (`BOT_MODEL`,
+`BOT_EFFORT`). Antes corría en `claude-opus-5` con effort `medium` y salía ~5x más
+caro por conversación. Ojo con el effort: la tabla de precios tiene grupos que se
+superponen y sedes que no cubren todas las edades, así que si aparecen errores de
+matching de edad/sede, subirlo a `medium` es lo primero a probar. Corré `npm run
+eval` antes y después de tocarlo.
+
+El system prompt se manda con `cache_control` y todo lo variable (fecha, hora,
+contexto de anuncio) va después del breakpoint. Si alguna vez movés algo variable
+al bloque cacheado, el cache deja de pegar y el costo se multiplica por diez.
 # futbolQueenBot

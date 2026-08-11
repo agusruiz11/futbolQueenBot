@@ -270,7 +270,10 @@ async function handleIgMessage(senderId) {
 
 async function responderIg(senderId, session, text, esPrimeraRespuesta) {
   session.messages.push({ role: 'user', content: text });
-  if (session.messages.length > 40) session.messages = session.messages.slice(-40);
+  // El historial se remanda entero en cada turno, así que cada mensaje que
+  // guardamos de más se paga en todos los turnos que siguen. 20 cubre de sobra
+  // una conversación de derivación.
+  if (session.messages.length > 20) session.messages = session.messages.slice(-20);
 
   let globos;
   try {
