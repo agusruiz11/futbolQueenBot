@@ -91,6 +91,33 @@ const FALLBACKS = (process.env.BOT_FALLBACKS || 'true') !== 'false';
 
 export const BOT_CONFIG = { MODEL, EFFORT, MAX_GLOBOS, FALLBACKS };
 
+// No todos los modelos aceptan `fallbacks`: si el que está configurado no lo
+// soporta, la API tira 400 y el bot le contesta el mensaje de error a TODO el
+// mundo. Pasó al cambiar de modelo con BOT_FALLBACKS=true. En vez de depender de
+// que alguien se acuerde de tocar la variable, lo apagamos solos y seguimos.
+let usarFallbacks = FALLBACKS;
+
+async function crearMensaje(params) {
+  // Miramos si ESTA llamada los mandó, no cómo quedó la flag: con varias
+  // llamadas en paralelo, la primera que falla la apaga y las demás tienen que
+  // poder reintentar igual.
+  const losMande = usarFallbacks;
+  try {
+    return await client.beta.messages.create({
+      ...params,
+      ...(losMande ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
+    });
+  } catch (err) {
+    const noLoSoporta = err?.status === 400 && /fallbacks/i.test(err?.message || '');
+    if (!losMande || !noLoSoporta) throw err;
+    if (usarFallbacks) {
+      console.warn(`[bot] ${params.model} no soporta fallbacks — los apago y reintento`);
+      usarFallbacks = false;
+    }
+    return client.beta.messages.create(params);
+  }
+}
+
 // Franja en la que Demián está sobre el WhatsApp. Fuera de ella el bot contesta
 // igual, pero no promete respuesta inmediata.
 const WSP_DESDE = Number(process.env.WSP_HORA_DESDE ?? 9);
@@ -132,13 +159,12 @@ export async function runBot(messages, { channel = 'web', origen = null } = {}) 
     },
   ];
 
-  const response = await client.beta.messages.create({
+  const response = await crearMensaje({
     model: MODEL,
     max_tokens: 8192,
     system,
     messages,
     output_config: { effort: EFFORT },
-    ...(FALLBACKS ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
   });
 
   // Un rechazo llega como HTTP 200 con content vacío: hay que mirar stop_reason

@@ -38,7 +38,13 @@
       "Bash(timeout 60 node /tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/c7a40679-f95f-4f8f-bde5-fcde5cfd68bb/scratchpad/test-agrupar.mjs \"$\\(pwd\\)/server.js\")",
       "Bash(cp /tmp/claude-1000/-media-elmapache-Western-Digital-HDD-Mis-Archivos-Documentos-1--work-1--Posicionarte-proyectos-futbolQueensBot/c7a40679-f95f-4f8f-bde5-fcde5cfd68bb/scratchpad/test-agrupar.mjs ./tmp-test-agrupar.mjs)",
       "Bash(timeout 60 node ./tmp-test-agrupar.mjs \"$\\(pwd\\)/server.js\")",
-      "Bash(node -e \"import\\('./bot.js'\\).then\\(m=>console.log\\('bot.js OK ->',JSON.stringify\\(m.BOT_CONFIG\\)\\)\\)\")"
+      "Bash(node -e \"import\\('./bot.js'\\).then\\(m=>console.log\\('bot.js OK ->',JSON.stringify\\(m.BOT_CONFIG\\)\\)\\)\")",
+      "Bash(node -e \"const d=require\\('./eval/dataset.json'\\); console.log\\('JSON OK,', d.casos.length, 'casos'\\); console.log\\('G8:', d.casos.find\\(c=>c.id==='G8'\\)?.descripcion\\)\")",
+      "Bash(timeout 300 node eval/run-eval.js --casos G8 --yes)",
+      "Bash(node -e \"const d=require\\('./eval/dataset.json'\\); d.casos.filter\\(c=>/matr|camiseta|llevar|indument/i.test\\(JSON.stringify\\(c\\)\\)\\).forEach\\(c=>console.log\\(c.id, '-', c.descripcion\\)\\)\")",
+      "Bash(timeout 400 node eval/run-eval.js --casos E2,E3,G6 --yes)",
+      "Bash(timeout 400 node eval/run-eval.js --casos E2,E3,G6,G8 --yes)",
+      "Bash(curl -s -m 90 -X POST \"https://futbolqueenbot-production.up.railway.app/chat\" -H \"Content-Type: application/json\" -d '{\"messages\":[{\"role\":\"user\",\"content\":\"hola\"},{\"role\":\"assistant\",\"content\":\"Hola! Tenemos sedes en Caballito, Villa Crespo, Nuñez y Colegiales. De dónde son ustedes?\"},{\"role\":\"user\",\"content\":\"Caballito, tiene 9 años\"}]}')"
     ]
   }
 }

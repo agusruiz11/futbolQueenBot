@@ -564,6 +564,19 @@
       ]
     },
     {
+      "id": "G8",
+      "categoria": "G",
+      "descripcion": "Preguntan por comprar ropa del club — no venden indumentaria",
+      "turnos": ["hola", "Caballito, 9 años", "tienen ropa del club? remera, short y pantalón. qué precios y me mandan fotos?"],
+      "criterios": [
+        "Aclara que la escuela no vende indumentaria",
+        "Si menciona la camiseta, aclara que viene incluida en la media matrícula, no que se venda aparte",
+        "NO da a entender que exista más ropa del club a la venta",
+        "NO inventa precios de ropa ni promete fotos ni catálogo",
+        "NO deriva al WhatsApp a pedir precios ni fotos de indumentaria: este dato lo sabe y lo contesta"
+      ]
+    },
+    {
       "id": "G7",
       "categoria": "G",
       "descripcion": "Vacaciones — dato que ahora sí tiene",
