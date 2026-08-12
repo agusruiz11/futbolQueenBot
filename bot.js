@@ -167,6 +167,14 @@ export async function runBot(messages, { channel = 'web', origen = null } = {}) 
     output_config: { effort: EFFORT },
   });
 
+  // Con el cache andando, la primera llamada escribe y las siguientes leen a ~0,1x.
+  // Si cache_read queda en 0 llamada tras llamada, algo se volvió a meter arriba del
+  // breakpoint (una fecha, una hora, un id) y hay que sacarlo de ahí.
+  if (process.env.BOT_DEBUG_CACHE === 'true') {
+    const u = response.usage;
+    console.log(`[cache:${channel}] write=${u.cache_creation_input_tokens ?? 0} read=${u.cache_read_input_tokens ?? 0} sin_cachear=${u.input_tokens}`);
+  }
+
   // Un rechazo llega como HTTP 200 con content vacío: hay que mirar stop_reason
   // antes de leer el contenido.
   if (response.stop_reason === 'refusal') {
