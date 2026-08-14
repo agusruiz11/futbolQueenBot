@@ -44,7 +44,10 @@
       "Bash(node -e \"const d=require\\('./eval/dataset.json'\\); d.casos.filter\\(c=>/matr|camiseta|llevar|indument/i.test\\(JSON.stringify\\(c\\)\\)\\).forEach\\(c=>console.log\\(c.id, '-', c.descripcion\\)\\)\")",
       "Bash(timeout 400 node eval/run-eval.js --casos E2,E3,G6 --yes)",
       "Bash(timeout 400 node eval/run-eval.js --casos E2,E3,G6,G8 --yes)",
-      "Bash(curl -s -m 90 -X POST \"https://futbolqueenbot-production.up.railway.app/chat\" -H \"Content-Type: application/json\" -d '{\"messages\":[{\"role\":\"user\",\"content\":\"hola\"},{\"role\":\"assistant\",\"content\":\"Hola! Tenemos sedes en Caballito, Villa Crespo, Nuñez y Colegiales. De dónde son ustedes?\"},{\"role\":\"user\",\"content\":\"Caballito, tiene 9 años\"}]}')"
+      "Bash(curl -s -m 90 -X POST \"https://futbolqueenbot-production.up.railway.app/chat\" -H \"Content-Type: application/json\" -d '{\"messages\":[{\"role\":\"user\",\"content\":\"hola\"},{\"role\":\"assistant\",\"content\":\"Hola! Tenemos sedes en Caballito, Villa Crespo, Nuñez y Colegiales. De dónde son ustedes?\"},{\"role\":\"user\",\"content\":\"Caballito, tiene 9 años\"}]}')",
+      "Bash(node -e \"const d=require\\('./eval/dataset.json'\\); console.log\\('dataset OK,', d.casos.length,'casos'\\)\")",
+      "Bash(node -e \"import\\('./prompt.js'\\).then\\(m=>console.log\\('prompt.js OK,', m.SYSTEM_PROMPT.length,'chars'\\)\\)\")",
+      "Bash(node tmp-test-globos.mjs)"
     ]
   }
 }

@@ -22,6 +22,9 @@ const RESUMEN_POR_DEFECTO =
   'Hola! Vengo del Instagram de Futbol Queens y quiero coordinar una clase de prueba.';
 
 const WSP_MARCA_RE = /\[\[\s*WSP\s*:\s*([\s\S]*?)\]\]/g;
+// Sin /g a propósito: .test() sobre una regex global lleva estado entre llamadas
+// (lastIndex) y devolvería false una de cada dos veces.
+const TIENE_MARCA_WSP = /\[\[\s*WSP\s*:/;
 
 // El destino final: abre el chat de WhatsApp con el texto ya escrito. Es el link
 // al que redirige el short link, y el que mandamos tal cual si no hay dominio
@@ -71,12 +74,25 @@ export function limpiarMarkdown(texto) {
 export const MAX_GLOBOS = Number(process.env.MAX_GLOBOS ?? 3);
 
 export function separarEnGlobos(texto) {
-  return texto
+  const globos = texto
     .split(/^\s*-{3,}\s*$/m)
     // El link va último: así la limpieza de markdown y de signos no le toca la URL.
-    .map((t) => insertarLinkWsp(limpiarMarkdown(sinSignosDeApertura(t))))
-    .filter(Boolean)
-    .slice(0, MAX_GLOBOS);
+    .map((crudo) => ({ crudo, texto: insertarLinkWsp(limpiarMarkdown(sinSignosDeApertura(crudo))) }))
+    .filter((g) => g.texto);
+
+  if (globos.length <= MAX_GLOBOS) return globos.map((g) => g.texto);
+
+  // Recortar de más es normal y no pasa nada, salvo con el globo del link: ese
+  // es la derivación entera. Si el modelo se pasa de globos y el link quedó
+  // último, el corte se lo lleva en silencio y la familia nunca llega al
+  // WhatsApp. Cuando eso pasa, lo rescatamos poniéndolo en el último lugar.
+  const conLink = globos.findIndex((g) => TIENE_MARCA_WSP.test(g.crudo));
+  const recortados = globos.slice(0, MAX_GLOBOS);
+  if (conLink >= MAX_GLOBOS) {
+    console.warn(`[bot] El link quedaba fuera del corte de ${MAX_GLOBOS} globos — lo rescato`);
+    recortados[MAX_GLOBOS - 1] = globos[conLink];
+  }
+  return recortados.map((g) => g.texto);
 }
 
 // ─── Llamada al modelo ───────────────────────────────────────────────────────

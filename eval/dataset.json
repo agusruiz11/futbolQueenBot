@@ -104,7 +104,7 @@
       "id": "B1",
       "categoria": "B",
       "descripcion": "Nena de 4 años en Villa Crespo — repregunta la sala y después da el grupo",
-      "turnos": ["hola", "somos de Villa Crespo, la nena tiene 4 años", "sala de 4"],
+      "turnos": ["hola", "somos de Villa Crespo, la nena tiene 4 años", "sala de 4", "cuánto sale?"],
       "criterios": [
         "Antes de dar grupo o precio pregunta en qué sala está",
         "Confirma que hay grupo en Villa Crespo para Sala de 4",
@@ -143,7 +143,8 @@
         "Aclara que Núñez no tiene grupo para 5 años, arranca en 1er grado",
         "Ofrece Villa Crespo o Colegiales",
         "NO inventa un grupo en Núñez",
-        "Puede repreguntar la sala antes de contestar; lo que no puede es ofrecerle un grupo de Núñez"
+        "NO le pregunta en qué sala está: con 5 años eso ya no corresponde",
+        "Lo que no puede hacer es ofrecerle un grupo de Núñez"
       ]
     },
     {
@@ -162,7 +163,7 @@
       "id": "C1",
       "categoria": "C",
       "descripcion": "Precio de Colegiales para 6 años",
-      "turnos": ["hola", "Colegiales, 6 años"],
+      "turnos": ["hola", "Colegiales, 6 años", "cuánto sale?"],
       "criterios": [
         "Grupo Sala de 5 a 2do grado",
         "Horario Viernes 17 a 18 hs",
@@ -207,7 +208,7 @@
       "id": "C5",
       "categoria": "C",
       "descripcion": "Villa Crespo con grupos superpuestos — 8 años, se cobra el precio más alto",
-      "turnos": ["hola", "Villa Crespo, 8 años"],
+      "turnos": ["hola", "Villa Crespo, 8 años", "y el precio?"],
       "criterios": [
         "Ofrece los días de los dos grupos juntos (2do a 4to grado y 3er grado a 1er año) como opciones de día",
         "Pasa UN SOLO precio: $85.000 efectivo / $93.000 transferencia",
@@ -438,7 +439,7 @@
       "id": "I1",
       "categoria": "I",
       "descripcion": "Cambia de sede a mitad de la conversación",
-      "turnos": ["hola", "Caballito, 10 años", "ah pero en realidad nos queda mejor Villa Crespo"],
+      "turnos": ["hola", "Caballito, 10 años", "ah pero en realidad nos queda mejor Villa Crespo", "cuánto sale ahí?"],
       "criterios": [
         "Pasa a los grupos y precios de Villa Crespo",
         "Mantiene la edad ya dada (10 años) y no la vuelve a preguntar",
