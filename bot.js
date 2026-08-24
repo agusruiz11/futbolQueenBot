@@ -4,7 +4,8 @@
 import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
 import {
-  SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, ZONAS_FUERA_DE_CABA,
+  SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, BARRIOS_LEJOS,
+  ZONAS_FUERA_DE_CABA, ALIAS_ZONAS,
 } from './prompt.js';
 import { guardarResumen } from './wsp-links.js';
 
@@ -218,14 +219,20 @@ export async function runBot(messages, { channel = 'web', origen = null } = {}) 
 
 const sinAcentos = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+// Los nombres se meten crudos adentro de una regex, así que hay que escaparlos:
+// "José C. Paz" trae un punto, que sin escapar matchea cualquier carácter.
+const escaparRegex = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const ZONAS_CONOCIDAS = [
   ...new Set([
     ...Object.values(BARRIOS_POR_SEDE).flatMap((s) => s.barrios),
     ...Object.keys(BARRIOS_POR_SEDE),
+    ...Object.keys(BARRIOS_LEJOS),
     ...ZONAS_FUERA_DE_CABA,
+    ...ALIAS_ZONAS,
     'caba', 'capital', 'capital federal',
   ]),
-].map(sinAcentos);
+].map((z) => escaparRegex(sinAcentos(z)));
 
 // Detecta si el mensaje nombra un barrio, un partido del conurbano o una sede. Es a
 // propósito conservador: ante la duda decimos que no y la apertura pregunta la zona,

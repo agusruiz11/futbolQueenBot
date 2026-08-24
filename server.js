@@ -62,10 +62,16 @@ app.post('/chat', async (req, res) => {
 
 // ─── Instagram: memoria de conversaciones (por usuario) ──────────────────────
 // En memoria: simple y suficiente para empezar. Se reinicia si Railway redeploya.
-// Migrar a una DB si se necesita persistencia real.
+// OJO: con el TTL en 48 hs un redeploy ya no se lleva puestas un par de charlas,
+// se lleva dos días. Para continuidad de verdad hay que persistir — el molde está
+// en wsp-links.js (escritura best-effort a disco + cargar() al arrancar) y pide un
+// volumen montado en Railway, el mismo que ya conviene montar para WSP_LINKS_FILE.
 
 const igSessions = new Map(); // senderId -> { messages, updatedAt, humanUntil, lastFallbackAt }
-const SESSION_TTL_MS = 6 * 60 * 60 * 1000;   // 6 horas de inactividad
+// 48 hs: la gente pregunta, lo charla en casa y contesta al otro día. Con 6 hs
+// esa respuesta caía en una sesión nueva y el bot volvía a saludar y a preguntar
+// todo de cero. Configurable por si hay que ajustarlo sin deploy.
+const SESSION_TTL_MS = Number(process.env.IG_SESSION_TTL_HS ?? 48) * 60 * 60 * 1000;
 const seenMids = new Set();                   // dedupe de reintentos de Meta
 const ownMids = new Set();                    // ids de mensajes que mandó el bot
 const HUMAN_HANDOFF_MS = 2 * 60 * 60 * 1000;  // si alguien contesta a mano, el bot se calla 2hs
@@ -80,9 +86,25 @@ function getIgSession(senderId) {
       pendientes: [], timerAgrupar: null, respondiendo: false,
     };
     igSessions.set(senderId, s);
+  } else {
+    // La charla sigue viva mientras alguien escriba, aunque el bot no conteste
+    // (handoff humano, fuera de ventana, error). Sin esto la sesión se vence a
+    // las 48 hs de la última respuesta del BOT, no del último mensaje.
+    s.updatedAt = now;
   }
   return s;
 }
+
+// Las sesiones vencidas solo se descartaban cuando ese mismo usuario volvía a
+// escribir: las que no vuelven quedaban en memoria para siempre.
+setInterval(() => {
+  const ahora = Date.now();
+  let borradas = 0;
+  for (const [id, s] of igSessions) {
+    if (ahora - s.updatedAt > SESSION_TTL_MS) { igSessions.delete(id); borradas++; }
+  }
+  if (borradas) console.log(`[ig] Limpieza: ${borradas} sesiones vencidas (quedan ${igSessions.size})`);
+}, 60 * 60 * 1000).unref();
 
 // ─── Ventana horaria del bot en Instagram ────────────────────────────────────
 // Por defecto contesta siempre. Si se definen IG_BOT_START_HOUR y IG_BOT_END_HOUR,

@@ -12,7 +12,8 @@
     "I": "Multi-turno y cambios de intención",
     "J": "Sala de 4 como piso y derivación al WhatsApp",
     "K": "Ubicación: qué sede según el barrio",
-    "L": "Leads que llegan desde el anuncio de Instagram"
+    "L": "Leads que llegan desde el anuncio de Instagram",
+    "M": "Turno mañana de Villa Crespo — viernes 10 hs (1er a 5to año)"
   },
   "casos": [
     {
@@ -680,6 +681,84 @@
         "Dice que las sedes están todas en CABA y que probablemente les quede lejos",
         "Igual les nombra las sedes, no cierra la puerta",
         "NO inventa una sede en zona sur ni en provincia"
+      ]
+    },
+    {
+      "id": "K5",
+      "categoria": "K",
+      "descripcion": "Barrio lejos de Capital — NO puede decir que la sede le queda cerca",
+      "turnos": ["hola", "somos de Lugano"],
+      "criterios": [
+        "NO dice que Caballito le queda cerca, cómodo ni a mano: Lugano está lejos de las cuatro sedes",
+        "Nombra Caballito como la que le queda MENOS LEJOS, y es honesta con que hay que viajar un poco",
+        "Pregunta si le sirve acercarse hasta ahí",
+        "NO enumera las cuatro sedes para que elija",
+        "No la descarta ni corta la charla por la distancia"
+      ]
+    },
+    {
+      "id": "K6",
+      "categoria": "K",
+      "descripcion": "Segundo cordón — no repregunta la zona y no promete cercanía",
+      "turnos": ["hola", "vivimos en Pilar"],
+      "criterios": [
+        "NO vuelve a preguntar de dónde son: Pilar ya es la respuesta a esa pregunta",
+        "NO le promete que alguna sede le queda cerca",
+        "Dice que las cuatro sedes están dentro de Capital y nombra la que le quede menos lejos",
+        "Pregunta si viaja seguido para ese lado, en vez de despedirla",
+        "NO inventa una sede en zona norte ni en provincia"
+      ]
+    },
+    {
+      "id": "K7",
+      "categoria": "K",
+      "descripcion": "Zona que no ubica — una sola repregunta, después las cuatro sedes",
+      "turnos": ["hola", "somos del barrio San Pantaleón", "cerca de la plaza del centro"],
+      "criterios": [
+        "En el segundo turno pregunta UNA vez cerca de qué barrio o avenida conocida queda",
+        "NO inventa dónde queda San Pantaleón ni lo manda a una sede como si lo ubicara",
+        "En el tercer turno NO vuelve a preguntar la zona: ya preguntó una vez y no alcanzó",
+        "Ahí nombra las cuatro sedes (Villa Crespo, Colegiales, Núñez, Caballito) y pregunta si le queda cómodo acercarse a alguna",
+        "La conversación no queda trabada dando vueltas con la misma pregunta"
+      ]
+    },
+    {
+      "id": "J5",
+      "categoria": "J",
+      "descripcion": "Pasa horarios sin que le hayan dicho que sí a la prueba — el link va igual",
+      "turnos": ["hola", "Villa Crespo, tiene 9 años"],
+      "criterios": [
+        "Pasa el horario que corresponde a esa edad en Villa Crespo",
+        "Ofrece la clase de prueba sin costo y DEJA EL LINK en esa misma respuesta, sin esperar a que la familia diga que sí",
+        "Explica en una línea corta que el link abre el WhatsApp del equipo con el resumen de la charla",
+        "NO ofrece el precio por su cuenta: no se lo pidieron",
+        "El link sale como una URL de WhatsApp, no como la marca [[WSP: ...]] cruda"
+      ]
+    },
+    {
+      "id": "M1",
+      "categoria": "M",
+      "descripcion": "Colegio a la tarde — tiene que ofrecer el viernes 10 hs sin que se lo pidan",
+      "turnos": ["hola", "Villa Crespo, tiene 15 años", "es que va al colegio a la tarde, no llega a ningún horario"],
+      "criterios": [
+        "Ofrece el turno mañana de Villa Crespo: Viernes 10 hs, en Belaustegui 553",
+        "Lo ofrece ella, sin que la familia lo haya pedido, porque el caso es exactamente para el que existe ese horario",
+        "NO inventa una hora de fin para el viernes: la única dato que hay es que arranca 10 hs",
+        "No la despide diciéndole que no hay horario que le sirva",
+        "Deja el link de WhatsApp en la respuesta donde pasa el horario"
+      ]
+    },
+    {
+      "id": "M2",
+      "categoria": "M",
+      "descripcion": "Precio del viernes 10 hs — deriva, no lo inventa ni lo deduce",
+      "turnos": ["hola", "Villa Crespo, tiene 16 años", "el del viernes a la mañana cuánto sale?"],
+      "criterios": [
+        "NO da un precio para el viernes 10 hs: ese dato no lo tiene",
+        "NO le pega el precio de los grupos de la tarde ($85.000 / $93.000 ni $107.000 / $115.000) como si fuera el del viernes",
+        "Dice que ese horario es nuevo y que el precio se lo confirma el equipo por WhatsApp",
+        "Pasa el link de WhatsApp",
+        "No arma por su cuenta una combinación de dos estímulos con el viernes adentro"
       ]
     }
   ]
