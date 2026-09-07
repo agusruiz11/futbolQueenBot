@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
-import { responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo } from './bot.js';
+import { responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp } from './bot.js';
 import { buscarResumen } from './wsp-links.js';
 
 const app = express();
@@ -24,10 +24,22 @@ app.use(express.static('public'));
 // Si el id no está (redeploy que se llevó el disco), redirigimos igual con el
 // mensaje por defecto: la familia llega al chat, solo que sin el resumen escrito.
 
+// Cuando el bot manda un link, Instagram lo visita para armar la tarjeta de
+// vista previa: cuatro pedidos en los primeros segundos, ninguno de una persona
+// (76 de 84 visitas en la primera semana de septiembre 2026). Los distinguimos
+// por User-Agent para que "Abren el link" mida gente de verdad.
+const CRAWLER_UA_RE = /facebookexternalhit|Facebot|facebookcatalog|meta-externalagent/i;
+
 app.get('/w/:id', (req, res) => {
   const resumen = buscarResumen(req.params.id);
-  if (resumen) console.log(`[w] Abren el link ${req.params.id}`);
-  else console.warn(`[w] Id desconocido ${req.params.id} — mando el mensaje por defecto`);
+  const esCrawler = CRAWLER_UA_RE.test(req.get('user-agent') || '');
+  if (esCrawler) {
+    console.log(`[w] Vista previa de Meta para ${req.params.id}${resumen ? '' : ' (id desconocido)'}`);
+  } else if (resumen) {
+    console.log(`[w] Abren el link ${req.params.id}`);
+  } else {
+    console.warn(`[w] Id desconocido ${req.params.id} — mando el mensaje por defecto`);
+  }
   res.set('Cache-Control', 'no-store'); // el id es de un solo lead, no se cachea
   res.redirect(302, linkWspLargo(resumen || ''));
 });
@@ -48,7 +60,14 @@ app.post('/chat', async (req, res) => {
   }, 45000);
 
   try {
-    const globos = await responder(messages, { channel: 'web', esPrimeraRespuesta });
+    // El historial llega del navegador con los links ya resueltos: se los
+    // devolvemos al modelo como marca [[WSP: ...]] para que no vea URLs propias.
+    const historial = messages.map((m) =>
+      m.role === 'assistant' && typeof m.content === 'string'
+        ? { ...m, content: ocultarLinkWsp(m.content) }
+        : m
+    );
+    const globos = await responder(historial, { channel: 'web', esPrimeraRespuesta });
     clearTimeout(timeoutId);
     if (res.headersSent) return;
     console.log(`[/chat] Respondiendo con ${globos.length} mensajes`);
@@ -315,7 +334,10 @@ async function responderIg(senderId, session, text, esPrimeraRespuesta) {
     globos = [FALLBACK_MSG];
   }
 
-  session.messages.push({ role: 'assistant', content: globos.join('\n') });
+  // En el historial va la marca [[WSP: ...]], no la URL corta: si el modelo ve
+  // la URL en sus mensajes anteriores, a veces la reescribe con un id inventado
+  // en vez de emitir la marca (3 casos en la primera semana de septiembre 2026).
+  session.messages.push({ role: 'assistant', content: ocultarLinkWsp(globos.join('\n')) });
   session.updatedAt = Date.now();
 
   console.log(`[ig] Enviando ${globos.length} mensajes (pausa ~${IG_MSG_DELAY_MS}ms ±${IG_MSG_JITTER_MS}ms)`);

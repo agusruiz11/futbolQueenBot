@@ -7,7 +7,7 @@ import {
   SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, BARRIOS_LEJOS,
   ZONAS_FUERA_DE_CABA, ALIAS_ZONAS,
 } from './prompt.js';
-import { guardarResumen } from './wsp-links.js';
+import { guardarResumen, buscarResumen } from './wsp-links.js';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -52,6 +52,20 @@ export function insertarLinkWsp(texto) {
   return texto.replace(WSP_MARCA_RE, (_, resumen) => linkWsp(resumen));
 }
 
+// Inversa de insertarLinkWsp, para el historial. Si el modelo ve la URL corta
+// en sus mensajes anteriores, a veces la vuelve a escribir con un id inventado
+// en vez de emitir la marca (3 casos en la primera semana de septiembre 2026).
+// Guardando la marca en el historial, nunca ve una URL propia. Una URL cuyo id
+// no conocemos queda como está: no hay resumen que recuperar.
+const LINK_CORTO_RE = /https?:\/\/\S+?\/w\/([A-Za-z0-9_-]{7,})/g;
+
+export function ocultarLinkWsp(texto) {
+  return texto.replace(LINK_CORTO_RE, (url, id) => {
+    const resumen = buscarResumen(id);
+    return resumen ? `[[WSP: ${resumen}]]` : url;
+  });
+}
+
 // ─── Formato de salida ───────────────────────────────────────────────────────
 
 // El guion pide preguntas sin signo de apertura ("De dónde son?" y no "¿De dónde
@@ -78,6 +92,9 @@ export function separarEnGlobos(texto) {
   const globos = texto
     .split(/^\s*-{3,}\s*$/m)
     // El link va último: así la limpieza de markdown y de signos no le toca la URL.
+    // ocultarLinkWsp va primero, como red de seguridad: si el modelo escribió una
+    // URL corta válida en vez de la marca, la volvemos marca y se resuelve limpia.
+    .map(ocultarLinkWsp)
     .map((crudo) => ({ crudo, texto: insertarLinkWsp(limpiarMarkdown(sinSignosDeApertura(crudo))) }))
     .filter((g) => g.texto);
 

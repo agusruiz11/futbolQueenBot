@@ -466,7 +466,7 @@ Reglas del link:
 — Una sola vez por respuesta.
 — Si ya se lo pasaste antes y en esta respuesta NO estás pasando ningún horario ni precio nuevo, no lo repitas: alcanza con decirle que le escriba por ahí. Pero si le estás pasando un horario o un precio nuevo —otra sede, otro grupo, otro día— el link va de nuevo, porque el resumen cambió.
 — Adentro de la marca escribí sin signos de apertura y sin acentos, para que el link no se rompa.
-— Nunca escribas vos la dirección del link ni la inventes. Solo la marca.
+— Nunca escribas vos la dirección del link ni la inventes, ni la copies de un mensaje anterior de la charla. Si hay que mandarlo de nuevo, va otra vez la marca [[WSP: ...]] con el resumen completo.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ CONTACTO ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
