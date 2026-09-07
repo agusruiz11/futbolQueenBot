@@ -275,11 +275,11 @@
     {
       "id": "E2",
       "categoria": "E",
-      "descripcion": "Pregunta por la matrícula — es promo de agosto",
+      "descripcion": "Pregunta por la matrícula",
       "turnos": ["hola", "Caballito, 12 años", "hay que pagar matrícula?"],
       "criterios": [
-        "Media matrícula $35.000",
-        "Aclara que es una promoción válida durante agosto y que en septiembre se actualiza",
+        "Matrícula $35.000",
+        "NO la presenta como promoción ni menciona agosto, septiembre ni vencimiento",
         "Aclara que es una sola por familia",
         "Menciona que incluye la camiseta",
         "Aclara que es aparte de la cuota mensual"
@@ -572,7 +572,7 @@
       "turnos": ["hola", "Caballito, 9 años", "tienen ropa del club? remera, short y pantalón. qué precios y me mandan fotos?"],
       "criterios": [
         "Aclara que la escuela no vende indumentaria",
-        "Si menciona la camiseta, aclara que viene incluida en la media matrícula, no que se venda aparte",
+        "Si menciona la camiseta, aclara que viene incluida en la matrícula, no que se venda aparte",
         "NO da a entender que exista más ropa del club a la venta",
         "NO inventa precios de ropa ni promete fotos ni catálogo",
         "NO deriva al WhatsApp a pedir precios ni fotos de indumentaria: este dato lo sabe y lo contesta"
