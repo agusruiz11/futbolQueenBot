@@ -1,7 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
-import { responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp } from './bot.js';
+import {
+  responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp,
+  clasificarPrimerMensaje, esRespuestaDeAnuncio, TRIAGE, MSG_BUSCA_TRABAJO,
+} from './bot.js';
 import { buscarResumen } from './wsp-links.js';
 
 const app = express();
@@ -103,6 +106,9 @@ function getIgSession(senderId) {
     s = {
       messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0, origen: null,
       pendientes: [], timerAgrupar: null, respondiendo: false,
+      // El triage marcó que no es una familia: no contestamos y guardamos lo que
+      // escribió para volver a clasificar con contexto si sigue escribiendo.
+      silenciada: false, silenciados: [],
     };
     igSessions.set(senderId, s);
   } else {
@@ -298,7 +304,21 @@ async function handleIgMessage(senderId) {
   const esPrimeraRespuesta = !session.messages.some((m) => m.role === 'assistant');
   session.respondiendo = true;
   try {
-    await responderIg(senderId, session, text, esPrimeraRespuesta);
+    const clasificacion = await clasificarIg(senderId, session, text, esPrimeraRespuesta);
+    if (clasificacion === TRIAGE.COMERCIAL || clasificacion === TRIAGE.OTRO) {
+      silenciarIg(senderId, session, text, clasificacion);
+    } else {
+      if (session.silenciada) {
+        session.silenciada = false;
+        session.silenciados = [];
+        console.log(`[triage] Levanto el silencio de ${senderId}: ahora parece una familia`);
+      }
+      if (clasificacion === TRIAGE.BUSCA_TRABAJO) {
+        await responderBuscaTrabajo(senderId, session, text);
+      } else {
+        await responderIg(senderId, session, text, esPrimeraRespuesta, clasificacion);
+      }
+    }
   } finally {
     session.respondiendo = false;
   }
@@ -309,7 +329,46 @@ async function handleIgMessage(senderId) {
   }
 }
 
-async function responderIg(senderId, session, text, esPrimeraRespuesta) {
+// ─── Triage: quién nos escribe ───────────────────────────────────────────────
+// Solo corre en el primer mensaje de la charla, o en cada mensaje de una charla
+// que ya está silenciada (por si el filtro se equivocó y era una familia). No corre
+// para los que vienen del anuncio: esos contestan "sí" o una edad, y son familia
+// por construcción.
+
+async function clasificarIg(senderId, session, text, esPrimeraRespuesta) {
+  if (!esPrimeraRespuesta && !session.silenciada) return null;
+  const deAnuncio = session.origen === 'anuncio' || (esPrimeraRespuesta && esRespuestaDeAnuncio(text));
+  if (deAnuncio) return null;
+  const etiqueta = await clasificarPrimerMensaje(text, { anteriores: session.silenciados });
+  console.log(`[triage] ${senderId}: ${etiqueta}${session.silenciada ? ' (charla silenciada)' : ''}`);
+  return etiqueta;
+}
+
+// Vendedores, ligas, sponsors, opiniones: no contestamos nada. El mensaje queda
+// sin leer en la bandeja y lo ve el equipo. La charla queda silenciada mientras
+// dure la sesión; cada mensaje nuevo se vuelve a clasificar con los anteriores
+// como contexto, así un "hola?" del vendedor sigue en silencio y una familia que
+// fue mal clasificada arranca con la apertura normal.
+function silenciarIg(senderId, session, text, clasificacion) {
+  session.silenciada = true;
+  session.silenciados.push(text);
+  if (session.silenciados.length > 6) session.silenciados = session.silenciados.slice(-6);
+  session.updatedAt = Date.now();
+  console.log(`[triage] Sin respuesta para ${senderId} (${clasificacion}) — queda para el equipo`);
+}
+
+// Busca trabajo: un solo mensaje fijo pidiendo el CV y nada más. No lo guardamos
+// en el historial a propósito: si después resulta ser una familia, arranca de cero
+// con la apertura en vez de seguir una charla sobre CVs.
+async function responderBuscaTrabajo(senderId, session, text) {
+  session.silenciada = true;
+  session.silenciados = [text, `(le contestamos: ${MSG_BUSCA_TRABAJO})`];
+  session.updatedAt = Date.now();
+  console.log(`[triage] ${senderId} busca trabajo — le pido el CV y no sigo la charla`);
+  await igSendSequence(senderId, [MSG_BUSCA_TRABAJO]);
+}
+
+async function responderIg(senderId, session, text, esPrimeraRespuesta, clasificacion = null) {
   session.messages.push({ role: 'user', content: text });
   // El historial se remanda entero en cada turno, así que cada mensaje que
   // guardamos de más se paga en todos los turnos que siguen. 20 cubre de sobra
@@ -319,7 +378,7 @@ async function responderIg(senderId, session, text, esPrimeraRespuesta) {
   let globos;
   try {
     globos = await responder(session.messages, {
-      channel: 'instagram', esPrimeraRespuesta, origen: session.origen,
+      channel: 'instagram', esPrimeraRespuesta, origen: session.origen, clasificacion,
     });
   } catch (err) {
     console.error('[ig] responder error:', err.message);
@@ -354,6 +413,9 @@ function vieneDeAnuncio(event) {
     String(r.source || '').toUpperCase() === 'ADS' || r.ad_id || r.ads_context_data
   ));
 }
+
+// Texto sin ninguna letra ni número: emojis, puntuación, espacios.
+const SIN_LETRAS_RE = /^[^\p{L}\p{N}]*$/u;
 
 // Valida que el webhook venga realmente de Meta (firma HMAC con el App Secret)
 function verifySignature(req) {
@@ -430,6 +492,18 @@ app.post('/webhook', (req, res) => {
 
         if (!senderId) continue;
         if (!msg.text) continue; // por ahora solo texto
+
+        // Reacción a una historia: llega como mensaje con el emoji de texto y
+        // reply_to.story. No es una consulta, y contestarle la apertura a alguien
+        // que tocó un corazón queda raro. Una respuesta a la historia con texto de
+        // verdad ("tienen sede en Núñez?") sí entra, esa es un lead.
+        if (msg.reply_to?.story && SIN_LETRAS_RE.test(msg.text)) {
+          console.log(`[webhook] Reacción a historia de ${senderId} ("${msg.text}") — no contesto`);
+          continue;
+        }
+        // Mientras confirmamos la forma exacta del payload, dejamos rastro de las
+        // respuestas a historias que sí pasan.
+        if (msg.reply_to) console.log(`[webhook] reply_to de ${senderId}: ${JSON.stringify(msg.reply_to)}`);
 
         if (msg.mid) {
           if (seenMids.has(msg.mid)) continue;

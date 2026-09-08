@@ -152,6 +152,67 @@ async function crearMensaje(params) {
   }
 }
 
+// ─── Triage del primer mensaje ───────────────────────────────────────────────
+// La apertura sale por código sin que el modelo lea el mensaje (ver responder()),
+// así que cualquier cosa que llegue al Instagram recibía "Somos una escuela de
+// fútbol... De dónde son ustedes?": vendedores, fotógrafas, ligas, gente que busca
+// trabajo. La agencia pidió (sep 2026) que a quien ofrece algo no se le conteste
+// nada, que a quien busca trabajo se le pida el CV, y que la consulta por fútbol
+// para adultas llegue al modelo, que ya sabe derivarla. Antes de la apertura
+// clasificamos el primer mensaje con una llamada chica, sin historial y sin
+// prompt de negocio. Si la llamada falla, la persona se trata como familia: es
+// mejor contestarle de más a un vendedor que dejar muda a una mamá.
+
+export const TRIAGE = {
+  FAMILIA: 'FAMILIA', COMERCIAL: 'COMERCIAL', BUSCA_TRABAJO: 'BUSCA_TRABAJO',
+  ADULTA: 'ADULTA', OTRO: 'OTRO',
+};
+
+// Sale por código, no del modelo: así es siempre exactamente este texto.
+export const MSG_BUSCA_TRABAJO =
+  'Gracias por escribirnos! Para sumarte al equipo mandanos tu CV a aguante@futbolqueens.com y lo vemos.';
+
+// Por defecto usa el mismo modelo del bot. La llamada es de ~600 tokens de entrada
+// y una palabra de salida, así que con un modelo chico (haiku) sale casi gratis.
+const TRIAGE_MODEL = process.env.TRIAGE_MODEL || MODEL;
+
+const TRIAGE_PROMPT = `Clasificás el primer mensaje que alguien le manda por Instagram a Fútbol Queens, una escuela de fútbol para nenas y adolescentes de 4 a 17 años en Buenos Aires. Respondé con UNA sola palabra, sin explicar nada:
+
+FAMILIA: una mamá, un papá o una familia preguntando por la escuela para una nena o adolescente (clases, sedes, horarios, precios, edades, clase de prueba), o un saludo, una pregunta corta o cualquier mensaje que podría ser el inicio de esa consulta ("hola", "info", "me interesa", "sí", una edad, un barrio).
+
+ADULTA: alguien que pregunta por fútbol para mujeres adultas, para ella misma o para mayores de 18.
+
+BUSCA_TRABAJO: alguien que se ofrece para trabajar en la escuela (profe, entrenadora, preparador físico, médico, enfermero, kinesiólogo, pasantía) o quiere mandar su CV.
+
+COMERCIAL: alguien que ofrece o vende algo a la escuela: marketing, manejo de redes, anuncios, fotografía, video, creación de contenido, influencers, merchandising, indumentaria, camisetas, instrumentos, fumigación, sponsors, canje, un torneo, una liga o una copa a la que invitan a sumarse, un programa de streaming, un medio, o cualquier otra propuesta o servicio.
+
+OTRO: no es una consulta por la escuela ni una oferta: opiniones, comentarios sobre un posteo, saludos de otro club o institución, mensajes de una persona que no es una familia, spam, cadenas, mensajes sin sentido.
+
+Regla de oro: ante la duda, FAMILIA. Solo marcá COMERCIAL, BUSCA_TRABAJO u OTRO cuando el mensaje lo dice con claridad. Un mensaje corto, ambiguo o mal escrito es FAMILIA.
+
+Si te pasan mensajes anteriores de la misma persona que quedaron sin respuesta, usalos como contexto: un "hola?", "gracias" o "vieron mi propuesta?" después de una oferta sigue siendo COMERCIAL.`;
+
+export async function clasificarPrimerMensaje(texto, { anteriores = [] } = {}) {
+  const contenido = anteriores.length
+    ? `Mensajes anteriores de la misma persona, sin respuesta:\n${anteriores.map((t) => `» ${t}`).join('\n')}\n\nMensaje nuevo:\n${texto}`
+    : texto;
+  try {
+    const r = await client.messages.create({
+      model: TRIAGE_MODEL,
+      max_tokens: 10,
+      system: TRIAGE_PROMPT,
+      messages: [{ role: 'user', content: contenido }],
+    });
+    const salida = r.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim().toUpperCase();
+    const etiqueta = Object.values(TRIAGE).find((e) => salida.includes(e));
+    if (!etiqueta) console.warn(`[triage] Salida rara "${salida}" — lo trato como FAMILIA`);
+    return etiqueta || TRIAGE.FAMILIA;
+  } catch (err) {
+    console.error('[triage] Error clasificando — lo trato como FAMILIA:', err.message);
+    return TRIAGE.FAMILIA;
+  }
+}
+
 // Franja en la que Demián está sobre el WhatsApp. Fuera de ella el bot contesta
 // igual, pero no promete respuesta inmediata.
 const WSP_DESDE = Number(process.env.WSP_HORA_DESDE ?? 9);
@@ -290,9 +351,11 @@ export function esRespuestaDeAnuncio(texto) {
   return edad !== undefined;
 }
 
+// `clasificacion` es la etiqueta del triage (server.js la calcula para Instagram;
+// el widget web no la manda). Solo cambia algo cuando es ADULTA.
 export async function responder(
   messages,
-  { channel = 'web', esPrimeraRespuesta = false, origen = null } = {},
+  { channel = 'web', esPrimeraRespuesta = false, origen = null, clasificacion = null } = {},
 ) {
   const primerMensaje = messages.find((m) => m.role === 'user')?.content ?? '';
   const deAnuncio = origen === 'anuncio'
@@ -307,10 +370,13 @@ export async function responder(
   if (deAnuncio) return runBot(messages, { channel, origen: 'anuncio' });
 
   // Todavía no sabemos de dónde son: la apertura ya se los pregunta y con eso alcanza.
-  if (!mencionaZona(primerMensaje)) return [...MENSAJES_APERTURA];
+  // Excepción: si pregunta por fútbol para adultas, la zona no importa. Antes esa
+  // consulta recibía la apertura y nunca llegaba al modelo, que es el que sabe
+  // derivarla a De Taquito Femenino o La Sede Colegiales.
+  if (clasificacion !== TRIAGE.ADULTA && !mencionaZona(primerMensaje)) return [...MENSAJES_APERTURA];
 
-  // Ya nos dijeron la zona: sacamos la pregunta de la apertura, dejamos la
-  // presentación y que siga el modelo. Le recortamos un globo para no abrumar.
+  // Ya nos dijeron la zona (o es una adulta): sacamos la pregunta de la apertura,
+  // dejamos la presentación y que siga el modelo. Le recortamos un globo para no abrumar.
   const respuesta = await runBot(messages, { channel });
   return [MENSAJES_APERTURA[0], ...respuesta.slice(0, Math.max(1, MAX_GLOBOS - 1))];
 }
