@@ -97,6 +97,12 @@ const SESSION_TTL_MS = Number(process.env.IG_SESSION_TTL_HS ?? 48) * 60 * 60 * 1
 const seenMids = new Set();                   // dedupe de reintentos de Meta
 const ownMids = new Set();                    // ids de mensajes que mandó el bot
 const HUMAN_HANDOFF_MS = 2 * 60 * 60 * 1000;  // si alguien contesta a mano, el bot se calla 2hs
+// Ventana durante la cual un echo que llega para este destinatario se considera
+// nuestro aunque su mid todavía no esté en ownMids. Meta a veces entrega el echo
+// ANTES de que la llamada de envío devuelva el message_id (16/9/2026, tres charlas
+// en dos días) y el bot se confundía a sí mismo con alguien del equipo: pausaba
+// la charla 2 hs y cortaba el resto de la secuencia.
+const OWN_SEND_GRACE_MS = 15 * 1000;
 const FALLBACK_COOLDOWN_MS = 15 * 60 * 1000;  // no repetir el aviso de error seguido
 
 function getIgSession(senderId) {
@@ -181,6 +187,11 @@ async function igSend(recipientId, message) {
   const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
   const token = process.env.IG_ACCESS_TOKEN;
   if (!token) { console.error('[ig] Falta IG_ACCESS_TOKEN — no puedo responder'); return; }
+
+  // Antes del fetch, no después: el echo puede llegar antes que la respuesta.
+  const session = getIgSession(recipientId);
+  session.sendingUntil = Date.now() + OWN_SEND_GRACE_MS;
+  if (message.text) session.lastSentText = message.text;
 
   const res = await fetch(`${base}/me/messages?access_token=${encodeURIComponent(token)}`, {
     method: 'POST',
@@ -481,6 +492,16 @@ app.post('/webhook', (req, res) => {
           if (msg.mid && ownMids.has(msg.mid)) continue;
           if (recipientId) {
             const session = getIgSession(recipientId);
+            // Echo de un envío nuestro que todavía no devolvió el message_id:
+            // hay un envío en curso para este destinatario, o el texto es
+            // exactamente el último que le mandamos.
+            const enviando = session.sendingUntil && Date.now() < session.sendingUntil;
+            const mismoTexto = !!msg.text && !!session.lastSentText && msg.text.trim() === session.lastSentText.trim();
+            if (enviando || mismoTexto) {
+              if (msg.mid) ownMids.add(msg.mid);
+              console.log(`[webhook] Echo propio para ${recipientId} (llegó antes que el message_id) — lo ignoro`);
+              continue;
+            }
             session.humanUntil = Date.now() + HUMAN_HANDOFF_MS;
             // Lo que estaba esperando para salir ya no sale: contesta la persona.
             clearTimeout(session.timerAgrupar);
