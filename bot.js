@@ -176,9 +176,9 @@ export const MSG_BUSCA_TRABAJO =
 // y una palabra de salida, así que con un modelo chico (haiku) sale casi gratis.
 const TRIAGE_MODEL = process.env.TRIAGE_MODEL || MODEL;
 
-const TRIAGE_PROMPT = `Clasificás el primer mensaje que alguien le manda por Instagram a Fútbol Queens, una escuela de fútbol para nenas y adolescentes de 4 a 17 años en Buenos Aires. Respondé con UNA sola palabra, sin explicar nada:
+const TRIAGE_PROMPT = `Clasificás el primer mensaje que alguien le manda por Instagram a Fútbol Queens, una escuela de fútbol para jugadoras de 4 a 17 años en Buenos Aires. Respondé con UNA sola palabra, sin explicar nada:
 
-FAMILIA: una mamá, un papá o una familia preguntando por la escuela para una nena o adolescente (clases, sedes, horarios, precios, edades, clase de prueba), o un saludo, una pregunta corta o cualquier mensaje que podría ser el inicio de esa consulta ("hola", "info", "me interesa", "sí", una edad, un barrio).
+FAMILIA: una mamá, un papá o una familia preguntando por la escuela para una jugadora de 4 a 17 años, o la adolescente misma preguntando por ella (clases, sedes, horarios, precios, edades, clase de prueba), o un saludo, una pregunta corta o cualquier mensaje que podría ser el inicio de esa consulta ("hola", "info", "me interesa", "sí", una edad, un barrio).
 
 ADULTA: alguien que pregunta por fútbol para mujeres adultas, para ella misma o para mayores de 18.
 
@@ -289,7 +289,7 @@ export async function runBot(messages, { channel = 'web', origen = null } = {}) 
 // ─── Apertura ────────────────────────────────────────────────────────────────
 
 // La apertura tiene dos mensajes: la presentación y "De dónde son ustedes?". Casi
-// nadie escribe "hola" pelado: la mayoría arranca con la edad de la nena. Si en ese
+// nadie escribe "hola" pelado: la mayoría arranca con la edad de la jugadora. Si en ese
 // caso mandáramos la apertura Y además dejáramos contestar al modelo, la familia
 // recibe cuatro mensajes de una, con el saludo y la pregunta de zona duplicados.
 // Así que el modelo habla en el primer turno solamente cuando ya no queda nada que
