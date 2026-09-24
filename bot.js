@@ -199,13 +199,15 @@ export async function clasificarPrimerMensaje(texto, { anteriores = [] } = {}) {
   try {
     const r = await client.messages.create({
       model: TRIAGE_MODEL,
-      max_tokens: 10,
+      // Con 10 la salida llegaba cortada ("", "F", "FA": 11 veces entre el 21 y
+      // el 24/9) y todo caía en FAMILIA, o sea que el filtro no filtraba nada.
+      max_tokens: 50,
       system: TRIAGE_PROMPT,
       messages: [{ role: 'user', content: contenido }],
     });
     const salida = r.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim().toUpperCase();
     const etiqueta = Object.values(TRIAGE).find((e) => salida.includes(e));
-    if (!etiqueta) console.warn(`[triage] Salida rara "${salida}" — lo trato como FAMILIA`);
+    if (!etiqueta) console.warn(`[triage] Salida rara "${salida}" (stop_reason: ${r.stop_reason}) — lo trato como FAMILIA`);
     return etiqueta || TRIAGE.FAMILIA;
   } catch (err) {
     console.error('[triage] Error clasificando — lo trato como FAMILIA:', err.message);

@@ -209,6 +209,76 @@ async function igSend(recipientId, message) {
   }
 }
 
+// ─── Historial desde Instagram ───────────────────────────────────────────────
+// Las sesiones viven en RAM: a las 48 hs sin mensajes o con un deploy se pierden y
+// el bot le volvía a mandar la apertura a alguien que ya había hablado con nosotros
+// (24/9/2026: "Yo ya averigué con ustedes..."). Instagram guarda la charla entera,
+// incluidas las respuestas manuales del equipo: cuando la sesión está vacía la
+// traemos de ahí y el bot sigue desde donde quedó. Falla abierta: ante cualquier
+// error devuelve vacío y el bot arranca de cero como antes.
+const IG_HISTORIAL_MSGS = Number(process.env.IG_HISTORIAL_MSGS ?? 20);
+const IG_HISTORIAL_DIAS = Number(process.env.IG_HISTORIAL_DIAS ?? 60);
+
+async function cargarHistorialIg(senderId, textosNuevos) {
+  const vacio = { historial: [], sinResponder: [] };
+  const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
+  const token = process.env.IG_ACCESS_TOKEN;
+  if (!token) return vacio;
+  try {
+    const qs = new URLSearchParams({
+      platform: 'instagram',
+      user_id: senderId,
+      fields: `messages.limit(${IG_HISTORIAL_MSGS}){created_time,from,message}`,
+      access_token: token,
+    });
+    const res = await fetch(`${base}/me/conversations?${qs}`);
+    if (!res.ok) {
+      console.warn(`[historial] ${senderId}: no pude traerlo (${res.status}) ${(await res.text()).slice(0, 300)}`);
+      return vacio;
+    }
+    const data = await res.json();
+    const msgs = (data?.data?.[0]?.messages?.data || [])
+      .filter((m) => m.message)   // stickers, reacciones, historias: afuera
+      .reverse();                 // Meta los da del más nuevo al más viejo
+
+    // Los mensajes que estamos por contestar ya figuran en Instagram: los sacamos
+    // del final para no mandárselos dos veces al modelo.
+    const pendientes = [...textosNuevos];
+    while (msgs.length && pendientes.length
+      && msgs.at(-1).from?.id === senderId && msgs.at(-1).message === pendientes.at(-1)) {
+      msgs.pop();
+      pendientes.pop();
+    }
+
+    // Charla muy vieja: mejor arrancar de cero.
+    const ultimo = msgs.at(-1);
+    if (!ultimo || Date.now() - Date.parse(ultimo.created_time) > IG_HISTORIAL_DIAS * 864e5) return vacio;
+
+    // Lo que no mandó el usuario lo mandamos nosotros (el bot o alguien del equipo
+    // a mano). Unimos los seguidos del mismo lado, como se guardan en la sesión.
+    const historial = [];
+    for (const m of msgs) {
+      const role = m.from?.id === senderId ? 'user' : 'assistant';
+      const content = role === 'assistant' ? ocultarLinkWsp(m.message) : m.message;
+      const prev = historial.at(-1);
+      if (prev?.role === role) prev.content += `\n${content}`;
+      else historial.push({ role, content });
+    }
+    while (historial[0]?.role === 'assistant') historial.shift(); // arranca por user
+
+    // Si lo último es del usuario (escribió y nadie le contestó), no lo perdemos:
+    // se suma al turno nuevo para que el modelo lo lea junto.
+    const sinResponder = historial.at(-1)?.role === 'user' ? [historial.pop().content] : [];
+
+    if (!historial.length) return vacio;
+    console.log(`[historial] ${senderId}: retomo con ${historial.length} turnos (último mensaje ${ultimo.created_time})`);
+    return { historial, sinResponder };
+  } catch (err) {
+    console.warn(`[historial] ${senderId}: ${err.message}`);
+    return vacio;
+  }
+}
+
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 // ─── Ritmo de envío ──────────────────────────────────────────────────────────
@@ -306,6 +376,23 @@ async function handleIgMessage(senderId) {
   const textos = session.pendientes || [];
   if (!textos.length) return;
   session.pendientes = [];
+
+  // Sesión vacía (primera vez, más de 48 hs sin hablar o hubo deploy): si ya
+  // hablamos antes con esta persona, retomamos la charla desde Instagram. Con
+  // historial, esPrimeraRespuesta da false y no corren ni el triage ni la apertura.
+  if (!session.messages.length && !session.historialCargado) {
+    session.historialCargado = true; // una sola vez por sesión, aunque venga vacío
+    session.respondiendo = true;     // lo que entre mientras esperamos queda encolado
+    try {
+      const { historial, sinResponder } = await cargarHistorialIg(senderId, textos);
+      if (historial.length) {
+        session.messages = historial;
+        textos.unshift(...sinResponder);
+      }
+    } finally {
+      session.respondiendo = false;
+    }
+  }
 
   // Los mensajes seguidos son una sola idea partida en varios envíos: se los
   // pasamos al modelo como un único turno, que es como los leería una persona.
