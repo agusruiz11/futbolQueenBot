@@ -105,6 +105,22 @@ const HUMAN_HANDOFF_MS = 2 * 60 * 60 * 1000;  // si alguien contesta a mano, el 
 const OWN_SEND_GRACE_MS = 15 * 1000;
 const FALLBACK_COOLDOWN_MS = 15 * 60 * 1000;  // no repetir el aviso de error seguido
 
+// La automatización de Meta que contesta por DM a quien comenta "info" en un
+// posteo sale como echo de la cuenta, igual que una respuesta del equipo. Sin
+// esto el bot pausaba 2 hs justo cuando la persona contestaba ese DM (28/9/2026).
+// AUTO_DM_TEXTOS: fragmentos del texto de esas automatizaciones, separados por "|".
+const normalizarTexto = (t) => String(t || '')
+  .toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
+const AUTO_DM_TEXTOS = (process.env.AUTO_DM_TEXTOS || 'escuela de futbol para ninas y adolescentes')
+  .split('|').map(normalizarTexto).filter(Boolean);
+const esDmAutomatico = (texto) => {
+  const t = normalizarTexto(texto);
+  return !!t && AUTO_DM_TEXTOS.some((f) => t.includes(f));
+};
+
 function getIgSession(senderId) {
   const now = Date.now();
   let s = igSessions.get(senderId);
@@ -587,6 +603,13 @@ app.post('/webhook', (req, res) => {
             if (enviando || mismoTexto) {
               if (msg.mid) ownMids.add(msg.mid);
               console.log(`[webhook] Echo propio para ${recipientId} (llegó antes que el message_id) — lo ignoro`);
+              continue;
+            }
+            // Evento crudo, para ver si Meta manda algún campo (app_id, etc.)
+            // que identifique la automatización sin depender del texto.
+            console.log(`[echo-raw] ${JSON.stringify(event)}`);
+            if (esDmAutomatico(msg.text)) {
+              console.log(`[handoff] Echo de automatización de Meta para ${recipientId}, no pauso`);
               continue;
             }
             session.humanUntil = Date.now() + HUMAN_HANDOFF_MS;
