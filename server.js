@@ -6,6 +6,7 @@ import {
   clasificarPrimerMensaje, esRespuestaDeAnuncio, TRIAGE, MSG_BUSCA_TRABAJO,
 } from './bot.js';
 import { buscarResumen } from './wsp-links.js';
+import { crearAgrupador } from './agrupar.js';
 
 const app = express();
 
@@ -127,7 +128,6 @@ function getIgSession(senderId) {
   if (!s || now - s.updatedAt > SESSION_TTL_MS) {
     s = {
       messages: [], updatedAt: now, humanUntil: 0, lastFallbackAt: 0, origen: null,
-      pendientes: [], timerAgrupar: null, respondiendo: false,
       // El triage marcó que no es una familia: no contestamos y guardamos lo que
       // escribió para volver a clasificar con contexto si sigue escribiendo.
       silenciada: false, silenciados: [],
@@ -352,94 +352,77 @@ async function igSendSequence(recipientId, globos) {
   }
 }
 
-// La gente escribe como habla: "16" / "Años", o la pregunta partida en dos.
-// Cada mensaje llega en su propio webhook, y si arrancamos una respuesta por cada
-// uno el modelo corre dos veces en paralelo sobre casi el mismo historial y manda
-// dos respuestas parecidas seguidas. Esperamos un ratito a que termine de escribir
-// y le contestamos una sola vez a todo junto.
-const IG_AGRUPAR_MS = Number(process.env.IG_AGRUPAR_MS ?? 2500);
+// ─── Agrupado de mensajes por persona ────────────────────────────────────────
+// La gente escribe como habla: "16" / "Años", o la pregunta partida en dos o tres
+// mensajes con segundos de diferencia. Cada mensaje llega en su propio webhook (o
+// varios en el mismo), y si arrancamos una respuesta por cada uno el modelo corre
+// en paralelo sobre casi el mismo historial y contesta lo mismo dos o tres veces
+// (28/9/2026, "Ah no llego x la escuela..." y "Un bajon" a 8 s dieron dos
+// respuestas). agrupar.js espera IG_DEBOUNCE_MS desde el último mensaje (tope
+// IG_DEBOUNCE_MAX_MS desde el primero), junta los textos y corre handleIgMessage
+// una sola vez; mientras responde, lo que llega va al turno siguiente.
+const IG_DEBOUNCE_MS = Number(process.env.IG_DEBOUNCE_MS ?? 20000);
+const IG_DEBOUNCE_MAX_MS = Number(process.env.IG_DEBOUNCE_MAX_MS ?? 60000);
 
-function encolarIgMessage(senderId, text, { deAnuncio = false } = {}) {
-  const session = getIgSession(senderId);
-  session.pendientes = session.pendientes || [];
-  session.pendientes.push(text);
-  if (deAnuncio) session.origen = 'anuncio';
+const igAgrupador = crearAgrupador({
+  esperaMs: IG_DEBOUNCE_MS,
+  maxMs: IG_DEBOUNCE_MAX_MS,
+  procesar: (senderId, text, { textos }) => handleIgMessage(senderId, text, textos),
+});
 
+function encolarIgMessage(senderId, text) {
+  const enEspera = igAgrupador.agregar(senderId, text);
   // Mostramos "escribiendo…" ya: si no, durante la espera parece que no lo leímos.
-  if (session.pendientes.length === 1) igSendAction(senderId, 'typing_on');
-
-  clearTimeout(session.timerAgrupar);
-  session.timerAgrupar = setTimeout(() => {
-    handleIgMessage(senderId).catch((err) => console.error('[ig] handle error:', err.message));
-  }, IG_AGRUPAR_MS);
+  if (enEspera === 1) igSendAction(senderId, 'typing_on');
 }
 
-async function handleIgMessage(senderId) {
+// Corre una vez por turno, con todos los mensajes de la espera ya juntos. El
+// agrupador garantiza que no hay dos turnos en paralelo para la misma persona.
+async function handleIgMessage(senderId, text, textos = [text]) {
   const session = getIgSession(senderId);
 
-  // Si todavía estamos respondiendo lo anterior, no arrancamos otra respuesta en
-  // paralelo: lo que llegó queda encolado y sale cuando la primera termine.
-  if (session.respondiendo) return;
-
-  // Pudo haber contestado alguien del equipo durante la espera: lo rechequeamos
-  // acá, no alcanza con el chequeo de cuando entró el mensaje.
+  // Durante la espera pudo contestar alguien del equipo o cerrarse la ventana
+  // horaria: lo rechequeamos acá, no alcanza con el chequeo de cuando entró.
   if (session.humanUntil && Date.now() < session.humanUntil) {
     console.log(`[webhook] Charla con ${senderId} pausada por handoff humano`);
-    session.pendientes = [];
     return;
   }
-
-  const textos = session.pendientes || [];
-  if (!textos.length) return;
-  session.pendientes = [];
+  if (!isBotActiveNow()) {
+    console.log(`[webhook] Fuera de la ventana del bot (hora ${horaLocal()}) — no contesto a ${senderId}`);
+    return;
+  }
 
   // Sesión vacía (primera vez, más de 48 hs sin hablar o hubo deploy): si ya
   // hablamos antes con esta persona, retomamos la charla desde Instagram. Con
   // historial, esPrimeraRespuesta da false y no corren ni el triage ni la apertura.
   if (!session.messages.length && !session.historialCargado) {
     session.historialCargado = true; // una sola vez por sesión, aunque venga vacío
-    session.respondiendo = true;     // lo que entre mientras esperamos queda encolado
-    try {
-      const { historial, sinResponder } = await cargarHistorialIg(senderId, textos);
-      if (historial.length) {
-        session.messages = historial;
-        textos.unshift(...sinResponder);
-      }
-    } finally {
-      session.respondiendo = false;
+    const { historial, sinResponder } = await cargarHistorialIg(senderId, textos);
+    if (historial.length) {
+      session.messages = historial;
+      // Lo que quedó sin responder en Instagram se suma adelante del turno nuevo.
+      text = [...sinResponder, text].join('\n');
     }
   }
 
-  // Los mensajes seguidos son una sola idea partida en varios envíos: se los
-  // pasamos al modelo como un único turno, que es como los leería una persona.
-  const text = textos.join('\n');
   console.log(`[ig] Procesando mensaje de ${senderId}: "${text}"${textos.length > 1 ? ` (${textos.length} mensajes agrupados)` : ''}${session.origen === 'anuncio' ? ' (viene del anuncio)' : ''}`);
 
   const esPrimeraRespuesta = !session.messages.some((m) => m.role === 'assistant');
-  session.respondiendo = true;
-  try {
-    const clasificacion = await clasificarIg(senderId, session, text, esPrimeraRespuesta);
-    if (clasificacion === TRIAGE.COMERCIAL || clasificacion === TRIAGE.OTRO) {
-      silenciarIg(senderId, session, text, clasificacion);
-    } else {
-      if (session.silenciada) {
-        session.silenciada = false;
-        session.silenciados = [];
-        console.log(`[triage] Levanto el silencio de ${senderId}: ahora parece una familia`);
-      }
-      if (clasificacion === TRIAGE.BUSCA_TRABAJO) {
-        await responderBuscaTrabajo(senderId, session, text);
-      } else {
-        await responderIg(senderId, session, text, esPrimeraRespuesta, clasificacion);
-      }
-    }
-  } finally {
-    session.respondiendo = false;
+  // El triage corre una sola vez, sobre el texto ya junto.
+  const clasificacion = await clasificarIg(senderId, session, text, esPrimeraRespuesta);
+  if (clasificacion === TRIAGE.COMERCIAL || clasificacion === TRIAGE.OTRO) {
+    silenciarIg(senderId, session, text, clasificacion);
+    return;
   }
-
-  // Llegó algo mientras contestábamos: lo atendemos ahora, sin volver a esperar.
-  if (session.pendientes.length) {
-    await handleIgMessage(senderId).catch((err) => console.error('[ig] handle error:', err.message));
+  if (session.silenciada) {
+    session.silenciada = false;
+    session.silenciados = [];
+    console.log(`[triage] Levanto el silencio de ${senderId}: ahora parece una familia`);
+  }
+  if (clasificacion === TRIAGE.BUSCA_TRABAJO) {
+    await responderBuscaTrabajo(senderId, session, text);
+  } else {
+    await responderIg(senderId, session, text, esPrimeraRespuesta, clasificacion);
   }
 }
 
@@ -614,8 +597,8 @@ app.post('/webhook', (req, res) => {
             }
             session.humanUntil = Date.now() + HUMAN_HANDOFF_MS;
             // Lo que estaba esperando para salir ya no sale: contesta la persona.
-            clearTimeout(session.timerAgrupar);
-            session.pendientes = [];
+            // (Si ya hay una respuesta en curso, igSendSequence la corta sola.)
+            igAgrupador.cancelar(recipientId, 'respuesta manual');
             console.log(`[webhook] Respuesta manual detectada para ${recipientId} — pauso ${HUMAN_HANDOFF_MS / 60000} min`);
           }
           continue;
@@ -653,7 +636,8 @@ app.post('/webhook', (req, res) => {
           continue;
         }
 
-        encolarIgMessage(senderId, msg.text, { deAnuncio: vieneDeAnuncio(event) });
+        if (vieneDeAnuncio(event)) session.origen = 'anuncio';
+        encolarIgMessage(senderId, msg.text);
       }
     }
   } catch (err) {
@@ -671,6 +655,7 @@ app.listen(PORT, () => {
     ? `${process.env.IG_BOT_START_HOUR}:00–${process.env.IG_BOT_END_HOUR}:00 (${IG_TZ})`
     : 'siempre activo';
   console.log(`[ig] Canal Instagram: ${(process.env.IG_ENABLED || 'true') === 'false' ? 'APAGADO' : ventana}`);
+  console.log(`[ig] Agrupo mensajes: espera ${IG_DEBOUNCE_MS / 1000} s desde el último, tope ${IG_DEBOUNCE_MAX_MS / 1000} s desde el primero`);
   console.log(`[wsp] Link de derivación: ${process.env.PUBLIC_BASE_URL
     ? `corto (${process.env.PUBLIC_BASE_URL.replace(/\/+$/, '')}/w/...)`
     : 'LARGO — definí PUBLIC_BASE_URL para acortarlo'}`);

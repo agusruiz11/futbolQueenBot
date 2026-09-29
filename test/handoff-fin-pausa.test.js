@@ -58,7 +58,7 @@ test('al vencer la pausa, retoma con el historial de Instagram', async (t) => {
     ...process.env, PORT: String(PORT), DOTENV_CONFIG_PATH: '/dev/null',
     IG_APP_SECRET: '', IG_ACCESS_TOKEN: 'test', IG_GRAPH_BASE: MOCK,
     ANTHROPIC_API_KEY: 'test', ANTHROPIC_BASE_URL: MOCK,
-    IG_AGRUPAR_MS: '100', IG_MSG_DELAY_MS: '0', IG_MSG_JITTER_MS: '0', IG_TYPING: 'false',
+    IG_DEBOUNCE_MS: '100', IG_DEBOUNCE_MAX_MS: '300', IG_MSG_DELAY_MS: '0', IG_MSG_JITTER_MS: '0', IG_TYPING: 'false',
   };
   for (const k of ['IG_BOT_START_HOUR', 'IG_BOT_END_HOUR', 'IG_ENABLED', 'PUBLIC_BASE_URL']) delete env[k];
   const srv = spawn(process.execPath, ['--import', RELOJ, 'server.js'], { cwd: RAIZ, env });
