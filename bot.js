@@ -406,5 +406,15 @@ export async function responder(
   // Ya nos dijeron la zona (o es una adulta): sacamos la pregunta de la apertura,
   // dejamos la presentación y que siga el modelo. Le recortamos un globo para no abrumar.
   const respuesta = await runBot(messages, { channel });
-  return [MENSAJES_APERTURA[0], ...respuesta.slice(0, Math.max(1, MAX_GLOBOS - 1))];
+  return [MENSAJES_APERTURA[0], ...recortarSinPerderLink(respuesta)];
+}
+
+// El recorte de la primera respuesta se llevaba el globo del link cuando quedaba
+// tercero: el bot decía "te dejo el link" y el link no llegaba (2/10/2026). Si
+// quedó afuera, va al final: la derivación no se pierde por ahorrar un globo.
+export function recortarSinPerderLink(respuesta) {
+  const recortada = respuesta.slice(0, Math.max(1, MAX_GLOBOS - 1));
+  const link = respuesta.find((g) => g instanceof GloboLink);
+  if (link && !recortada.includes(link)) recortada.push(link);
+  return recortada;
 }
