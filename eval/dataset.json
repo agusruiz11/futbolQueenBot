@@ -13,7 +13,8 @@
     "J": "Sala de 4 como piso y derivación al WhatsApp",
     "K": "Ubicación: qué sede según el barrio",
     "L": "Leads que llegan desde el anuncio de Instagram",
-    "M": "Turno mañana de Villa Crespo — viernes 10 hs (1er a 5to año)"
+    "M": "Turno mañana de Villa Crespo — viernes 10 hs (1er a 5to año)",
+    "N": "El link de WhatsApp no abre — número del equipo y teléfono de contacto"
   },
   "casos": [
     {
@@ -759,6 +760,45 @@
         "Dice que ese horario es nuevo y que el precio se lo confirma el equipo por WhatsApp",
         "Pasa el link de WhatsApp",
         "No arma por su cuenta una combinación de dos estímulos con el viernes adentro"
+      ]
+    },
+    {
+      "id": "N1",
+      "categoria": "N",
+      "descripcion": "Madre: el link no le abre — número del equipo, ofrece dejar teléfono y confirma sin prometer horario",
+      "turnos": [
+        "hola",
+        "Caballito, mi hija Sofi tiene 8 años",
+        "el link no me abre",
+        "dale, te dejo mi número: 11 5555 1234"
+      ],
+      "criterios": [
+        "Cuando le dice que el link no abre, NO vuelve a mandar el link de WhatsApp en esa respuesta ni en la siguiente",
+        "En un globo le pasa el número del equipo 11 2394 7419 y le dice qué contar en el mensaje, con datos de la charla (Sofi, 8 años o su grado, sede Caballito)",
+        "En otro globo, separado del anterior, le ofrece dejar un número de teléfono para que el equipo la contacte",
+        "Cuando deja el número, le agradece y confirma que el equipo le escribe por WhatsApp",
+        "NO promete día ni horario para ese mensaje (nada de 'hoy', 'mañana', 'en un rato', 'al toque')",
+        "No le pide el número de otra persona: quien escribe es la madre, adulta"
+      ]
+    },
+    {
+      "id": "N2",
+      "categoria": "N",
+      "descripcion": "Jugadora de 17 que escribe por ella misma: el link no le abre — pide el número de una persona adulta, y si insiste toma el suyo con recaudos",
+      "turnos": [
+        "hola",
+        "soy yo la que quiere jugar, tengo 17 y soy de Villa Crespo",
+        "no me funciona el link",
+        "no, pasale el mío mejor: 11 6666 7777"
+      ],
+      "criterios": [
+        "Cuando le dice que el link no funciona, NO vuelve a mandar el link de WhatsApp en esa respuesta ni en la siguiente",
+        "En un globo le pasa el número del equipo 11 2394 7419 y le dice qué contar en el mensaje, con datos de la charla (17 años, sede Villa Crespo)",
+        "Al ofrecer que dejen un teléfono, pide el de una persona adulta responsable (mamá, papá o quien se encargue), NO el de la jugadora",
+        "Cuando insiste con su propio número, lo toma sin discutir ni volver a exigir el de un adulto",
+        "No le pide ningún otro dato personal (dirección, colegio, redes, apellido)",
+        "Le sugiere avisarle a una persona adulta de su familia que el equipo le va a escribir",
+        "Agradece y confirma que el equipo le escribe por WhatsApp, sin prometer día ni horario"
       ]
     }
   ]

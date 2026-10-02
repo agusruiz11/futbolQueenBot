@@ -8,10 +8,11 @@ import {
   ZONAS_FUERA_DE_CABA, ALIAS_ZONAS,
 } from './prompt.js';
 import { guardarResumen, buscarResumen } from './wsp-links.js';
+import { CONTACTO_WSP } from './contacto.js';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-export const CONTACTO_WSP = '11 2394 7419';
+export { CONTACTO_WSP };
 export const FALLBACK_MSG = `Perdón, se me complicó procesar tu consulta. Escribinos directo al WhatsApp y te respondemos: ${CONTACTO_WSP}`;
 
 // El bot cierra derivando al WhatsApp que atiende Demián, con el resumen de la
@@ -46,6 +47,25 @@ export function linkWsp(resumen = '') {
   const base = (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, '');
   if (!base) return linkWspLargo(texto);
   return `${base}/w/${guardarResumen(texto)}`;
+}
+
+// El globo del link sale de separarEnGlobos como GloboLink y no como string,
+// para que Instagram lo mande como botón (server.js, igSendSequence). Como texto
+// —toString y toJSON— es el mismo globo de siempre, con la URL ya puesta: el
+// historial, el chat web y el eval lo siguen leyendo igual que antes.
+//   resumen: lo que iba adentro de la marca, para armar el link del botón.
+//   link:    linkWsp(resumen), el que va en texto si el botón no sale.
+//   extra:   lo que el modelo escribió en el globo además de la marca, si algo.
+export class GloboLink {
+  constructor(limpio, resumen) {
+    this.resumen = resumen;
+    this.link = linkWsp(resumen);
+    this.texto = limpio.replace(WSP_MARCA_RE, () => this.link);
+    this.extra = limpio.replace(WSP_MARCA_RE, '').trim();
+  }
+
+  toString() { return this.texto; }
+  toJSON() { return this.texto; }
 }
 
 export function insertarLinkWsp(texto) {
@@ -95,8 +115,14 @@ export function separarEnGlobos(texto) {
     // ocultarLinkWsp va primero, como red de seguridad: si el modelo escribió una
     // URL corta válida en vez de la marca, la volvemos marca y se resuelve limpia.
     .map(ocultarLinkWsp)
-    .map((crudo) => ({ crudo, texto: insertarLinkWsp(limpiarMarkdown(sinSignosDeApertura(crudo))) }))
-    .filter((g) => g.texto);
+    .map((crudo) => {
+      const limpio = limpiarMarkdown(sinSignosDeApertura(crudo));
+      // Una sola marca por globo (lo pide el prompt): si vinieran dos, el botón
+      // lleva el resumen de la primera y el texto de respaldo repite su link.
+      const marca = limpio.match(new RegExp(WSP_MARCA_RE.source));
+      return { crudo, texto: marca ? new GloboLink(limpio, marca[1].trim()) : limpio };
+    })
+    .filter((g) => String(g.texto));
 
   if (globos.length <= MAX_GLOBOS) return globos.map((g) => g.texto);
 

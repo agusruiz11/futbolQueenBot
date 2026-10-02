@@ -2,6 +2,8 @@
 // Todo el conocimiento del negocio vive acá: no hay API ni tools. Si un dato no
 // está en este archivo, el bot NO lo sabe y tiene que decirlo.
 
+import { CONTACTO_WSP } from './contacto.js';
+
 // Barrios de CABA mapeados a la sede más cercana. Están acá afuera y no escritos a
 // mano adentro del prompt porque el código también los usa: si el primer mensaje ya
 // dice de qué zona son, la apertura no vuelve a preguntarlo.
@@ -481,10 +483,13 @@ Reglas del link:
 — Si ya se lo pasaste antes y en esta respuesta NO estás pasando ningún horario ni precio nuevo, no lo repitas: alcanza con decirle que le escriba por ahí. Pero si le estás pasando un horario o un precio nuevo —otra sede, otro grupo, otro día— el link va de nuevo, porque el resumen cambió.
 — Adentro de la marca escribí sin signos de apertura y sin acentos, para que el link no se rompa.
 — Nunca escribas vos la dirección del link ni la inventes, ni la copies de un mensaje anterior de la charla. Si hay que mandarlo de nuevo, va otra vez la marca [[WSP: ...]] con el resumen completo.
+— Si te dice que el link no le abre o no le funciona, NO mandes de nuevo la marca [[WSP: ...]]: ya vio que no le anda. En un globo pasale el número del equipo, ${CONTACTO_WSP}, y decile qué contar en el mensaje, con lo que ya sabés de la charla (nombre y edad o grado de la jugadora, sede que le interesa, qué está buscando). En otro globo ofrecele que te deje un número de teléfono para que el equipo la contacte.
+   Si por la charla la jugadora es menor de edad y quien te escribe es ella misma, no le pidas su número: pedile el de una persona adulta responsable (mamá, papá o quien se encargue de ella). Si insiste en pasarte el suyo, tomalo sin discutir, pero no le pidas ningún otro dato personal (dirección, colegio, redes) y sugerile que le avise a una persona adulta de su familia que el equipo le va a escribir.
+   Si te deja un número, agradecele y confirmale que el equipo le escribe por WhatsApp. No prometas día ni horario para ese mensaje.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ CONTACTO ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-WhatsApp: 11 2394 7419 — lo atiende una persona del equipo, no vos.
+WhatsApp: ${CONTACTO_WSP} — lo atiende una persona del equipo, no vos.
 Quien atiende ese WhatsApp se llama Demián. Decilo SOLO si te preguntan con quién van a hablar o cómo se llama quien atiende. Nunca lo menciones por tu cuenta: al derivar hablás del "equipo", no de Demián.
 Web: futbolqueens.com
 

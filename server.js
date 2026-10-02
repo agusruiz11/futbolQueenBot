@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
 import {
-  responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp,
+  responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp, GloboLink,
   clasificarPrimerMensaje, esRespuestaDeAnuncio, TRIAGE, MSG_BUSCA_TRABAJO,
 } from './bot.js';
 import { buscarResumen } from './wsp-links.js';
@@ -207,7 +207,8 @@ async function igSend(recipientId, message) {
   // Antes del fetch, no después: el echo puede llegar antes que la respuesta.
   const session = getIgSession(recipientId);
   session.sendingUntil = Date.now() + OWN_SEND_GRACE_MS;
-  if (message.text) session.lastSentText = message.text;
+  const texto = message.text ?? message.attachment?.payload?.text;
+  if (texto) session.lastSentText = texto;
 
   const res = await fetch(`${base}/me/messages?access_token=${encodeURIComponent(token)}`, {
     method: 'POST',
@@ -216,13 +217,48 @@ async function igSend(recipientId, message) {
   });
   if (!res.ok) {
     console.error('[ig] Error enviando mensaje:', res.status, await res.text());
-  } else {
-    const data = await res.json().catch(() => null);
-    if (data?.message_id) {
-      ownMids.add(data.message_id);
-      if (ownMids.size > 1000) ownMids.clear();
-    }
+    return false;
   }
+  const data = await res.json().catch(() => null);
+  if (data?.message_id) {
+    ownMids.add(data.message_id);
+    if (ownMids.size > 1000) ownMids.clear();
+  }
+  return true;
+}
+
+// El link de derivación va como botón: en Instagram la URL suelta se ve como un
+// bloque de texto raro y la gente no la toca. El botón lleva el link largo, que
+// no depende de que /w/ esté arriba. Si Meta rechaza el template, mandamos el
+// link corto en texto como antes: la derivación no se puede perder.
+const TEXTO_BOTON_WSP = 'Tocá acá para escribirle al equipo con el resumen de lo que hablamos';
+
+async function igSendLinkWsp(recipientId, globo) {
+  // Si el modelo escribió algo más en el globo del link, eso sale antes, en texto.
+  if (globo.extra) {
+    for (const chunk of chunkText(globo.extra)) await igSend(recipientId, { text: chunk });
+  }
+  let ok = false;
+  try {
+    ok = await igSend(recipientId, {
+      attachment: {
+        type: 'template',
+        payload: {
+          template_type: 'button',
+          text: TEXTO_BOTON_WSP,
+          buttons: [{ type: 'web_url', url: linkWspLargo(globo.resumen), title: 'Abrir WhatsApp' }],
+        },
+      },
+    });
+  } catch (err) {
+    console.error('[ig] Error enviando el botón:', err.message);
+  }
+  if (ok) {
+    console.log(`[wsp] Botón enviado a ${recipientId}`);
+    return;
+  }
+  console.warn(`[wsp] Botón rechazado, mando link a ${recipientId}`);
+  await igSend(recipientId, { text: globo.link });
 }
 
 // ─── Historial desde Instagram ───────────────────────────────────────────────
@@ -332,7 +368,7 @@ async function igSendAction(recipientId, action) {
 
 async function igSendSequence(recipientId, globos) {
   const session = igSessions.get(recipientId);
-  for (const [i, texto] of globos.entries()) {
+  for (const [i, globo] of globos.entries()) {
     // La secuencia dura varios segundos: si alguien del equipo contesta a mano
     // en el medio, cortamos acá en vez de seguir escribiendo encima.
     if (session?.humanUntil && Date.now() < session.humanUntil) {
@@ -342,7 +378,15 @@ async function igSendSequence(recipientId, globos) {
     await igSendAction(recipientId, 'typing_on');
     // El primero sale antes: el cliente ya esperó lo que tardó el modelo
     await sleep(i === 0 ? Math.min(900, humanDelay()) : humanDelay());
-    for (const chunk of chunkText(texto)) {
+    if (globo instanceof GloboLink) {
+      try {
+        await igSendLinkWsp(recipientId, globo);
+      } catch (err) {
+        console.error('[ig] Error enviando:', err.message);
+      }
+      continue;
+    }
+    for (const chunk of chunkText(globo)) {
       try {
         await igSend(recipientId, { text: chunk });
       } catch (err) {
