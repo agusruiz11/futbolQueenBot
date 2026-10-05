@@ -7,6 +7,8 @@ import {
 } from './bot.js';
 import { buscarResumen } from './wsp-links.js';
 import { crearAgrupador } from './agrupar.js';
+import { crearAlertas } from './alertas.js';
+import { crearTokenIg } from './ig-token.js';
 
 const app = express();
 
@@ -199,9 +201,32 @@ function chunkText(text, max = 950) {
 // La app usa Instagram API con Instagram Login: los tokens arrancan con IGAA y
 // van contra graph.instagram.com. graph.facebook.com no los sabe leer y responde
 // "Cannot parse access token" (code 190), que parece un token vencido y no lo es.
+
+// Esos tokens duran 60 días y Meta no avisa cuando vencen: el 5/10/2026 el bot
+// estuvo horas recibiendo mensajes sin poder contestar ninguno. ig-token.js lo
+// refresca solo y avisa por Slack (alertas.js) si igual deja de servir. El token
+// se pide siempre con igToken.token(), nunca directo de process.env.
+const { alertar, conSlack } = crearAlertas({
+  webhookUrl: process.env.SLACK_WEBHOOK_URL,
+  bot: 'Futbol Queens',
+});
+const igToken = crearTokenIg({
+  envToken: process.env.IG_ACCESS_TOKEN,
+  base: process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0',
+  archivo: process.env.IG_TOKEN_FILE ?? './data/ig-token.json',
+  // El refresco corre solo en Railway: levantar el bot en una máquina con el
+  // token de producción en el .env no tiene que tocar ese token.
+  // IG_TOKEN_REFRESH=true o false lo fuerza.
+  refrescoActivo: process.env.IG_TOKEN_REFRESH
+    ? process.env.IG_TOKEN_REFRESH !== 'false'
+    : !!process.env.RAILWAY_ENVIRONMENT,
+  diasAviso: process.env.IG_TOKEN_AVISO_DIAS,
+  alertar,
+});
+
 async function igSend(recipientId, message) {
   const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
-  const token = process.env.IG_ACCESS_TOKEN;
+  const token = igToken.token();
   if (!token) { console.error('[ig] Falta IG_ACCESS_TOKEN — no puedo responder'); return; }
 
   // Antes del fetch, no después: el echo puede llegar antes que la respuesta.
@@ -216,7 +241,9 @@ async function igSend(recipientId, message) {
     body: JSON.stringify({ recipient: { id: recipientId }, message }),
   });
   if (!res.ok) {
-    console.error('[ig] Error enviando mensaje:', res.status, await res.text());
+    const cuerpo = await res.text();
+    console.error('[ig] Error enviando mensaje:', res.status, cuerpo);
+    igToken.notarError(cuerpo, token);
     return false;
   }
   const data = await res.json().catch(() => null);
@@ -274,7 +301,7 @@ const IG_HISTORIAL_DIAS = Number(process.env.IG_HISTORIAL_DIAS ?? 60);
 async function cargarHistorialIg(senderId, textosNuevos) {
   const vacio = { historial: [], sinResponder: [] };
   const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
-  const token = process.env.IG_ACCESS_TOKEN;
+  const token = igToken.token();
   if (!token) return vacio;
   try {
     const qs = new URLSearchParams({
@@ -285,7 +312,9 @@ async function cargarHistorialIg(senderId, textosNuevos) {
     });
     const res = await fetch(`${base}/me/conversations?${qs}`);
     if (!res.ok) {
-      console.warn(`[historial] ${senderId}: no pude traerlo (${res.status}) ${(await res.text()).slice(0, 300)}`);
+      const cuerpo = await res.text();
+      console.warn(`[historial] ${senderId}: no pude traerlo (${res.status}) ${cuerpo.slice(0, 300)}`);
+      igToken.notarError(cuerpo, token);
       return vacio;
     }
     const data = await res.json();
@@ -351,7 +380,7 @@ function humanDelay() {
 async function igSendAction(recipientId, action) {
   if (!IG_TYPING) return;
   const base = process.env.IG_GRAPH_BASE || 'https://graph.instagram.com/v21.0';
-  const token = process.env.IG_ACCESS_TOKEN;
+  const token = igToken.token();
   if (!token) return;
   try {
     const res = await fetch(`${base}/me/messages?access_token=${encodeURIComponent(token)}`, {
@@ -703,4 +732,7 @@ app.listen(PORT, () => {
   console.log(`[wsp] Link de derivación: ${process.env.PUBLIC_BASE_URL
     ? `corto (${process.env.PUBLIC_BASE_URL.replace(/\/+$/, '')}/w/...)`
     : 'LARGO — definí PUBLIC_BASE_URL para acortarlo'}`);
+  console.log(`[avisos] Slack: ${conSlack ? 'activos' : 'APAGADOS (falta SLACK_WEBHOOK_URL), solo quedan en el log'}`);
+  // Refresca el token si toca y revisa cuánto le queda: a los 30 s y una vez por día.
+  igToken.iniciar();
 });
