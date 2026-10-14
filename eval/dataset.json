@@ -14,7 +14,8 @@
     "K": "Ubicación: qué sede según el barrio",
     "L": "Leads que llegan desde el anuncio de Instagram",
     "M": "Turno mañana de Villa Crespo — viernes 10 hs (1er a 5to año)",
-    "N": "El link de WhatsApp no abre — número del equipo y teléfono de contacto"
+    "N": "El link de WhatsApp no abre — número del equipo y teléfono de contacto",
+    "O": "Cierre de verano — de la segunda mitad de diciembre a la segunda mitad de marzo"
   },
   "casos": [
     {
@@ -799,6 +800,49 @@
         "No le pide ningún otro dato personal (dirección, colegio, redes, apellido)",
         "Le sugiere avisarle a una persona adulta de su familia que el equipo le va a escribir",
         "Agradece y confirma que el equipo le escribe por WhatsApp, sin prometer día ni horario"
+      ]
+    },
+    {
+      "id": "O1",
+      "categoria": "O",
+      "descripcion": "Pide horarios para diciembre — avisa el cierre desde la segunda mitad y la vuelta en la segunda mitad de marzo",
+      "turnos": [
+        "cuáles son los horarios para diciembre?"
+      ],
+      "criterios": [
+        "Avisa con claridad que en verano la escuela cierra, desde la segunda mitad de diciembre",
+        "Dice que la escuela retoma en la segunda mitad de marzo",
+        "NO pasa horarios como si hubiera clases durante todo diciembre: si da horarios, deja claro que valen solo hasta el cierre",
+        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)"
+      ]
+    },
+    {
+      "id": "O2",
+      "categoria": "O",
+      "descripcion": "Quieren arrancar en enero — avisa que está cerrado, que retoma en la segunda mitad de marzo y ofrece un camino",
+      "turnos": [
+        "queremos arrancar en enero"
+      ],
+      "criterios": [
+        "Avisa con claridad que en enero la escuela está cerrada por el verano",
+        "Dice que la escuela retoma en la segunda mitad de marzo",
+        "NO ofrece horarios, clase de prueba ni inscripción para enero como si estuviera abierto",
+        "Ofrece una alternativa: venir a probar antes del cierre o dejar el contacto por WhatsApp para arrancar a la vuelta",
+        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)"
+      ]
+    },
+    {
+      "id": "O3",
+      "categoria": "O",
+      "descripcion": "Preguntan si se puede empezar en marzo — avisa que retoma en la segunda mitad, no a principio de mes",
+      "turnos": [
+        "en marzo se puede empezar?"
+      ],
+      "criterios": [
+        "Dice que la escuela retoma en la segunda mitad de marzo, o sea que se puede empezar recién desde ahí",
+        "NO da a entender que hay clases a principio de marzo",
+        "NO pasa horarios como si la escuela estuviera abierta todo marzo",
+        "NO inventa una fecha exacta de vuelta (un día puntual del mes)"
       ]
     }
   ]

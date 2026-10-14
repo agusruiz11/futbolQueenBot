@@ -227,7 +227,11 @@ export async function clasificarPrimerMensaje(texto, { anteriores = [] } = {}) {
       model: TRIAGE_MODEL,
       // Con 10 la salida llegaba cortada ("", "F", "FA": 11 veces entre el 21 y
       // el 24/9) y todo caía en FAMILIA, o sea que el filtro no filtraba nada.
-      max_tokens: 50,
+      // El modelo piensa antes de contestar y eso también cuenta en max_tokens:
+      // effort low lo acorta y 200 deja margen para que llegue la palabra.
+      // Ojo: haiku-4-5 y otros modelos viejos rechazan effort (400 → todo FAMILIA).
+      max_tokens: 200,
+      output_config: { effort: 'low' },
       system: TRIAGE_PROMPT,
       messages: [{ role: 'user', content: contenido }],
     });
