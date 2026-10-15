@@ -11,7 +11,9 @@ import path from 'path';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
-import { responder } from '../bot.js';
+import {
+  responder, clasificarPrimerMensaje, esRespuestaDeAnuncio, TRIAGE, MSG_BUSCA_TRABAJO, BOT_CONFIG,
+} from '../bot.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -48,20 +50,53 @@ function confirmar(pregunta) {
 
 // ─── Ejecución de un caso ────────────────────────────────────────────────────
 
+// El triage es el de Instagram (server.js: clasificarIg, silenciarIg,
+// responderBuscaTrabajo): corre en el primer mensaje y, mientras la charla esté
+// silenciada, en cada mensaje nuevo con los anteriores como contexto. El chat web
+// (/chat) no hace triage: acá replicamos el camino de Instagram.
+async function clasificar(texto, { esPrimeraRespuesta, silenciada, silenciados }) {
+  if (!esPrimeraRespuesta && !silenciada) return null;
+  if (esPrimeraRespuesta && esRespuestaDeAnuncio(texto)) return null;
+  return clasificarPrimerMensaje(texto, { anteriores: silenciados });
+}
+
 // Replica la conversación turno por turno y devuelve la transcripción completa.
 async function correrCaso(caso) {
   const messages = [];
   const transcripcion = [];
+  let silenciada = false;
+  let silenciados = [];
 
   for (const turno of caso.turnos) {
-    messages.push({ role: 'user', content: turno });
     transcripcion.push({ quien: 'usuario', texto: turno });
 
     const esPrimeraRespuesta = !messages.some((m) => m.role === 'assistant');
-    const globos = await responder(messages, { channel: 'web', esPrimeraRespuesta });
+    const clasificacion = await clasificar(turno, { esPrimeraRespuesta, silenciada, silenciados });
+
+    // Comercial u otro: no se contesta nada y el mensaje no entra al historial.
+    if (clasificacion === TRIAGE.COMERCIAL || clasificacion === TRIAGE.OTRO) {
+      silenciada = true;
+      silenciados = [...silenciados, turno].slice(-6);
+      transcripcion.push({ quien: 'bot', globos: [], triage: clasificacion });
+      continue;
+    }
+    if (silenciada) {
+      silenciada = false;
+      silenciados = [];
+    }
+    // Busca trabajo: el mensaje fijo del CV, también fuera del historial.
+    if (clasificacion === TRIAGE.BUSCA_TRABAJO) {
+      silenciada = true;
+      silenciados = [turno, `(le contestamos: ${MSG_BUSCA_TRABAJO})`];
+      transcripcion.push({ quien: 'bot', globos: [MSG_BUSCA_TRABAJO], triage: clasificacion });
+      continue;
+    }
+
+    messages.push({ role: 'user', content: turno });
+    const globos = await responder(messages, { channel: 'web', esPrimeraRespuesta, clasificacion });
 
     messages.push({ role: 'assistant', content: globos.join('\n') });
-    transcripcion.push({ quien: 'bot', globos });
+    transcripcion.push({ quien: 'bot', globos, ...(clasificacion && { triage: clasificacion }) });
   }
 
   return transcripcion;
@@ -106,9 +141,11 @@ Reglas de evaluación:
 
 async function juzgar(caso, transcripcion) {
   const conversacion = transcripcion
-    .map((t) => (t.quien === 'usuario'
-      ? `USUARIO: ${t.texto}`
-      : t.globos.map((g, i) => `BOT (globo ${i + 1}): ${g}`).join('\n')))
+    .map((t) => {
+      if (t.quien === 'usuario') return `USUARIO: ${t.texto}`;
+      if (!t.globos.length) return `BOT: (no contesta nada: el filtro de entrada clasificó el mensaje como ${t.triage})`;
+      return t.globos.map((g, i) => `BOT (globo ${i + 1}): ${g}`).join('\n');
+    })
     .join('\n\n');
 
   const criterios = caso.criterios.map((c, i) => `${i + 1}. ${c}`).join('\n');
@@ -159,8 +196,9 @@ async function main() {
     process.exit(1);
   }
 
-  const llamadas = casos.reduce((acc, c) => acc + c.turnos.length + 1, 0);
-  console.log(`\nVan a correr ${casos.length} casos (~${llamadas} llamadas a la API, modelo ${JUEZ_MODEL}).`);
+  // Por caso: un turno del bot por mensaje, el triage del primero y el juez.
+  const llamadas = casos.reduce((acc, c) => acc + c.turnos.length + 2, 0);
+  console.log(`\nVan a correr ${casos.length} casos (~${llamadas} llamadas a la API; bot ${BOT_CONFIG.MODEL}, juez ${JUEZ_MODEL}).`);
 
   if (!args.yes) {
     const ok = await confirmar('Esto consume tokens. Seguimos? (si/no) ');

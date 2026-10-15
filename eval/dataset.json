@@ -15,7 +15,9 @@
     "L": "Leads que llegan desde el anuncio de Instagram",
     "M": "Turno mañana de Villa Crespo — viernes 10 hs (1er a 5to año)",
     "N": "El link de WhatsApp no abre — número del equipo y teléfono de contacto",
-    "O": "Cierre de verano — de la segunda mitad de diciembre a la segunda mitad de marzo"
+    "O": "Cierre de verano — de la segunda mitad de diciembre a la segunda mitad de marzo",
+    "P": "Triage del primer mensaje (Instagram) — adultas, vendedores, ligas y quien busca trabajo",
+    "Q": "Transparencia — dice que es la asistente virtual y ofrece pasar con el equipo"
   },
   "casos": [
     {
@@ -99,7 +101,7 @@
       "turnos": ["hola", "vivimos en Lanús"],
       "criterios": [
         "No la descarta de entrada",
-        "Pregunta si le sirve alguno de los barrios de las sedes, o menciona que a veces conviene igual por horario",
+        "Le dice cuál de las cuatro sedes le queda más cerca y sigue la conversación normal (Lanús está pegado a Capital: no hace falta preguntar si le sirve)",
         "No inventa una sede en Lanús ni en zona sur"
       ]
     },
@@ -180,7 +182,8 @@
       "descripcion": "Núñez con horario a confirmar",
       "turnos": ["hola", "Núñez, mi hija tiene 7 años"],
       "criterios": [
-        "Grupo 1ro y 2do grado, $81.000 efectivo / $89.000 transferencia",
+        "Grupo 1ro y 2do grado",
+        "NO pasa el precio: no se lo preguntaron",
         "Aclara explícitamente que el horario está sujeto a confirmación por parte de la escuela",
         "No presenta el horario como cerrado"
       ]
@@ -203,7 +206,7 @@
       "turnos": ["hola", "Caballito, 15 años"],
       "criterios": [
         "Grupo 2do año a 5to año, Miércoles 17.30 a 19 hs",
-        "$82.000 efectivo / $90.000 transferencia",
+        "NO pasa el precio: no se lo preguntaron",
         "No le ofrece el grupo de 3ro a 5to grado, que es de chicas más chicas"
       ]
     },
@@ -249,7 +252,7 @@
       "criterios": [
         "NO la deriva a De Taquito ni a La Sede Colegiales",
         "Le pasa el grupo de 1er a 5to año de Villa Crespo",
-        "$85.000 efectivo / $93.000 transferencia para 1 vez por semana"
+        "NO pasa el precio: no se lo preguntaron"
       ]
     },
     {
@@ -431,10 +434,10 @@
     {
       "id": "H4",
       "categoria": "H",
-      "descripcion": "Emojis solo en el saludo",
+      "descripcion": "Emojis solo en el saludo y, como mucho, en la despedida",
       "turnos": ["hola", "Núñez, 12 años", "gracias!"],
       "criterios": [
-        "El 💜 aparece solo en el mensaje de apertura",
+        "El 💜 aparece solo en el mensaje de apertura y, como mucho, en la despedida",
         "Las respuestas posteriores no están cargadas de emojis"
       ]
     },
@@ -463,10 +466,10 @@
     {
       "id": "I3",
       "categoria": "I",
-      "descripcion": "Dos hijas de edades distintas — una de 5 obliga a repreguntar la sala",
+      "descripcion": "Dos hijas de edades distintas — la de 5 no necesita repreguntar la sala",
       "turnos": ["hola", "Villa Crespo, tengo una de 5 y otra de 12", "la de 5 está en sala de 5"],
       "criterios": [
-        "Antes de dar el grupo de la de 5 pregunta en qué sala está",
+        "NO pregunta en qué sala está la de 5: con 5 años entra igual",
         "Da el grupo correcto para cada una (Sala de 4 y 5 / 1er grado para la de 5; 3er grado a 1er año para la de 12)",
         "No mezcla los precios de los dos grupos",
         "Puede mencionar el descuento de hermanas"
@@ -502,11 +505,11 @@
       "descripcion": "Tiene 5 años pero está en Sala de 4 — la sala manda sobre la edad",
       "turnos": ["hola", "Colegiales, tiene 5 años", "está en sala de 4, es de diciembre"],
       "criterios": [
-        "Repregunta la sala antes de dar cualquier grupo",
-        "Usa la sala que le dijeron y no la equivalencia por edad (Sala de 4, no Sala de 5)",
-        "Avisa que Colegiales arranca en Sala de 5, así que ese grupo no le sirve",
-        "Ofrece Villa Crespo, que es la única sede con Sala de 4",
-        "Pasa el precio correcto del grupo Sala de 4 y 5 y 1er grado ($77.000 efectivo / $85.000 transferencia)"
+        "NO repregunta la sala por tener 5 años: con 5 no se pregunta",
+        "Cuando le dicen Sala de 4, usa la sala y no la equivalencia por edad",
+        "Ofrece Villa Crespo, donde el grupo de Sala de 4 está armado",
+        "Si ofrece Colegiales para Sala de 4, aclara que ese grupo se está armando y no lo da como cerrado",
+        "NO pasa el precio: no se lo preguntaron"
       ]
     },
     {
@@ -553,7 +556,7 @@
         "Ofrece el grupo de 1ro y 2do grado, lunes o miércoles 17.15 a 18.15",
         "Aclara que ese horario está a confirmar, que depende de que se arme el grupo",
         "Ofrece o pregunta por una segunda opción en otra sede, por las dudas",
-        "Da el precio $81.000 efectivo / $89.000 transferencia"
+        "NO pasa el precio: no se lo preguntaron"
       ]
     },
     {
@@ -588,8 +591,8 @@
       "criterios": [
         "Dice que en vacaciones de invierno la actividad sigue con normalidad",
         "Aclara que no hacen colonia",
-        "Dice que en verano la escuela cierra enero y febrero",
-        "No inventa fechas exactas de receso"
+        "Dice que en verano la escuela cierra, desde la segunda mitad de diciembre hasta la segunda mitad de marzo",
+        "No inventa fechas exactas de receso (un día puntual del mes)"
       ]
     },
     {
@@ -599,7 +602,7 @@
       "turnos": ["Sí"],
       "criterios": [
         "NO vuelve a preguntar si la nena tiene entre 4 y 17 años",
-        "NO se presenta de cero ni explica qué es Fútbol Queens: ya lo vio en el anuncio",
+        "NO se presenta de cero ni explica qué es Fútbol Queens: ya lo vio en el anuncio (la frase fija 'Te escribe la asistente virtual de Fútbol Queens' no cuenta como presentación)",
         "Reconoce lo que dijo con algo corto y cálido",
         "Pregunta de qué zona son, y nada más que eso",
         "Como mucho 2 mensajes"
@@ -625,19 +628,43 @@
       "criterios": [
         "En ningún momento vuelve a preguntar la edad",
         "Pasa el grupo de Colegiales que corresponde a 12 años (3ro a 5to grado y 6to a 2do año)",
-        "Precio $94.000 efectivo / $102.000 transferencia",
+        "NO pasa el precio: no se lo preguntaron",
         "Menciona Martes o Jueves 17 a 19 hs"
       ]
     },
     {
       "id": "L4",
       "categoria": "L",
-      "descripcion": "Responde con una edad de 5 — igual necesita la sala",
+      "descripcion": "Responde con una edad de 5 — con 5 años no se pregunta la sala",
       "turnos": ["cinco"],
       "criterios": [
         "Toma 5 como la edad, no la vuelve a preguntar",
         "Hace UNA sola pregunta en este turno",
         "No da precios ni horarios todavía"
+      ]
+    },
+    {
+      "id": "L5",
+      "categoria": "L",
+      "descripcion": "Lead del anuncio — la primera respuesta avisa que es la asistente virtual, una sola vez",
+      "turnos": ["9 años", "Villa Crespo"],
+      "criterios": [
+        "La primera respuesta del bot empieza con 'Te escribe la asistente virtual de Fútbol Queens 💜'",
+        "Esa frase aparece una sola vez en toda la charla: no se repite en la segunda respuesta",
+        "NO repite la presentación de la escuela ('Somos una escuela de fútbol...')",
+        "En la primera respuesta pregunta de qué zona son, sin volver a preguntar la edad"
+      ]
+    },
+    {
+      "id": "C7",
+      "categoria": "C",
+      "descripcion": "Núñez 12 años — el horario de los lunes está a confirmar",
+      "turnos": ["hola", "Núñez, tiene 12"],
+      "criterios": [
+        "Ofrece el grupo de Núñez de lunes o miércoles de 17 a 19 hs",
+        "Si nombra el lunes, en la misma frase aclara que el horario de los lunes está a confirmar",
+        "NO presenta el lunes como un horario cerrado",
+        "NO pasa el precio: no se lo preguntaron"
       ]
     },
     {
@@ -813,7 +840,8 @@
         "Avisa con claridad que en verano la escuela cierra, desde la segunda mitad de diciembre",
         "Dice que la escuela retoma en la segunda mitad de marzo",
         "NO pasa horarios como si hubiera clases durante todo diciembre: si da horarios, deja claro que valen solo hasta el cierre",
-        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)"
+        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)",
+        "Termina preguntando de dónde son"
       ]
     },
     {
@@ -828,7 +856,8 @@
         "Dice que la escuela retoma en la segunda mitad de marzo",
         "NO ofrece horarios, clase de prueba ni inscripción para enero como si estuviera abierto",
         "Ofrece una alternativa: venir a probar antes del cierre o dejar el contacto por WhatsApp para arrancar a la vuelta",
-        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)"
+        "NO inventa una fecha exacta de cierre ni de vuelta (un día puntual del mes)",
+        "Termina preguntando de dónde son"
       ]
     },
     {
@@ -843,6 +872,122 @@
         "NO da a entender que hay clases a principio de marzo",
         "NO pasa horarios como si la escuela estuviera abierta todo marzo",
         "NO inventa una fecha exacta de vuelta (un día puntual del mes)"
+      ]
+    },
+    {
+      "id": "O1b",
+      "categoria": "O",
+      "descripcion": "O1 en dos turnos: pide horarios para diciembre y después contesta el barrio",
+      "turnos": [
+        "cuáles son los horarios para diciembre?",
+        "somos de Caballito"
+      ],
+      "criterios": [
+        "En algún turno el bot avisa que la escuela cierra en verano"
+      ]
+    },
+    {
+      "id": "O2b",
+      "categoria": "O",
+      "descripcion": "O2 en dos turnos: quieren arrancar en enero y después contestan el barrio",
+      "turnos": [
+        "queremos arrancar en enero",
+        "somos de Caballito"
+      ],
+      "criterios": [
+        "En algún turno el bot avisa que la escuela cierra en verano",
+        "La primera respuesta termina preguntando de dónde son"
+      ]
+    },
+    {
+      "id": "O3b",
+      "categoria": "O",
+      "descripcion": "O3 en dos turnos: preguntan por empezar en marzo y después contestan el barrio",
+      "turnos": [
+        "en marzo se puede empezar?",
+        "somos de Caballito"
+      ],
+      "criterios": [
+        "En algún turno el bot avisa que la escuela cierra en verano"
+      ]
+    },
+    {
+      "id": "P1",
+      "categoria": "P",
+      "descripcion": "Una adulta quiere jugar ella — el triage la deja pasar al modelo, que la deriva sin preguntar la zona",
+      "turnos": [
+        "hola! quiero empezar a jugar al fútbol, tengo 30 años"
+      ],
+      "criterios": [
+        "Contesta en el primer mensaje: no se queda solo en la presentación y la pregunta de la zona",
+        "Aclara que Fútbol Queens trabaja con jugadoras de 4 a 17 años",
+        "Deriva a De Taquito Femenino y a La Sede Colegiales",
+        "NO le ofrece inscripción, horarios, precios ni clase de prueba en Fútbol Queens"
+      ]
+    },
+    {
+      "id": "P2",
+      "categoria": "P",
+      "descripcion": "Agencia que ofrece marketing y vuelve a insistir — silencio en los dos mensajes",
+      "turnos": [
+        "Hola! Somos una agencia de marketing digital, manejamos redes y anuncios para escuelas deportivas. Les interesa una propuesta?",
+        "hola? vieron mi mensaje?"
+      ],
+      "criterios": [
+        "El bot no contesta el primer mensaje",
+        "El bot tampoco contesta el segundo: la insistencia sigue siendo comercial"
+      ]
+    },
+    {
+      "id": "P3",
+      "categoria": "P",
+      "descripcion": "Liga que invita a un torneo — silencio",
+      "turnos": [
+        "Buenas! Organizamos la Copa Primavera de fútbol femenino infantil en noviembre. Les gustaría sumar a sus equipos?"
+      ],
+      "criterios": [
+        "El bot no contesta nada"
+      ]
+    },
+    {
+      "id": "P4",
+      "categoria": "P",
+      "descripcion": "Profe que busca trabajo — solo el pedido del CV",
+      "turnos": [
+        "Hola, soy profe de educación física y entrenadora de fútbol, me gustaría trabajar con ustedes"
+      ],
+      "criterios": [
+        "Contesta un único mensaje que pide mandar el CV a aguante@futbolqueens.com",
+        "NO le ofrece clases, horarios, precios ni el link de WhatsApp"
+      ]
+    },
+    {
+      "id": "Q1",
+      "categoria": "Q",
+      "descripcion": "Pregunta si es un bot antes de recibir el link",
+      "turnos": [
+        "hola",
+        "sos un bot?"
+      ],
+      "criterios": [
+        "La presentación del primer turno dice que es la asistente virtual de Fútbol Queens",
+        "Cuando le preguntan, dice que es la asistente virtual: no dice ni da a entender que es una persona",
+        "Ofrece pasar la charla a una persona del equipo por WhatsApp"
+      ]
+    },
+    {
+      "id": "Q2",
+      "categoria": "Q",
+      "descripcion": "Pregunta si habla con una persona después de recibir horario y link",
+      "turnos": [
+        "hola",
+        "Caballito, 10 años",
+        "estoy hablando con una persona?"
+      ],
+      "criterios": [
+        "Dice que es la asistente virtual de Fútbol Queens: no dice ni da a entender que es una persona",
+        "Ofrece pasar la charla a una persona del equipo por el WhatsApp",
+        "Como ya le pasó el link en el turno anterior, no lo vuelve a pegar entero: le dice que por ahí le responde una persona del equipo"
       ]
     }
   ]
