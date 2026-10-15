@@ -5,6 +5,7 @@ import {
   responder, FALLBACK_MSG, BOT_CONFIG, linkWspLargo, ocultarLinkWsp, GloboLink,
   clasificarPrimerMensaje, esRespuestaDeAnuncio, TRIAGE, MSG_BUSCA_TRABAJO,
 } from './bot.js';
+import { AVISO_ASISTENTE_ANUNCIO, MENSAJES_APERTURA } from './prompt.js';
 import { buscarResumen } from './wsp-links.js';
 import { crearAgrupador } from './agrupar.js';
 import { crearAlertas } from './alertas.js';
@@ -122,6 +123,15 @@ const AUTO_DM_TEXTOS = (process.env.AUTO_DM_TEXTOS || 'escuela de futbol para ni
 const esDmAutomatico = (texto) => {
   const t = normalizarTexto(texto);
   return !!t && AUTO_DM_TEXTOS.some((f) => t.includes(f));
+};
+
+// Textos fijos que el bot manda por código. Si su echo llega sin que sepamos que
+// fue nuestro, no es una respuesta manual. Van acá y no en AUTO_DM_TEXTOS: no
+// dependen de cómo esté configurada la variable en Railway.
+const TEXTOS_PROPIOS = [...MENSAJES_APERTURA, AVISO_ASISTENTE_ANUNCIO].map(normalizarTexto);
+const esTextoPropio = (texto) => {
+  const t = normalizarTexto(texto);
+  return !!t && TEXTOS_PROPIOS.some((f) => t.includes(f));
 };
 
 function getIgSession(senderId) {
@@ -666,6 +676,10 @@ app.post('/webhook', (req, res) => {
             console.log(`[echo-raw] ${JSON.stringify(event)}`);
             if (esDmAutomatico(msg.text)) {
               console.log(`[handoff] Echo de automatización de Meta para ${recipientId}, no pauso`);
+              continue;
+            }
+            if (esTextoPropio(msg.text)) {
+              console.log(`[handoff] Echo de un texto fijo del bot para ${recipientId}, no pauso`);
               continue;
             }
             session.humanUntil = Date.now() + HUMAN_HANDOFF_MS;

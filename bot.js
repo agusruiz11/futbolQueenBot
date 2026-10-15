@@ -5,7 +5,7 @@ import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   SYSTEM_PROMPT, MENSAJES_APERTURA, NOTA_ANUNCIO, BARRIOS_POR_SEDE, BARRIOS_LEJOS,
-  ZONAS_FUERA_DE_CABA, ALIAS_ZONAS,
+  ZONAS_FUERA_DE_CABA, ALIAS_ZONAS, AVISO_ASISTENTE_ANUNCIO,
 } from './prompt.js';
 import { guardarResumen, buscarResumen } from './wsp-links.js';
 import { CONTACTO_WSP } from './contacto.js';
@@ -90,6 +90,10 @@ function copiaGloboLink(globo, texto, extras) {
 // Junta texto al final de un globo, sea texto suelto o el del link.
 function juntarAtras(globo, texto) {
   return globo instanceof GloboLink ? globo.conTextoAtras(texto) : `${globo}\n${texto}`;
+}
+
+function juntarAdelante(texto, globo) {
+  return globo instanceof GloboLink ? globo.conTextoAdelante(texto) : `${texto}\n${globo}`;
 }
 
 export function insertarLinkWsp(texto) {
@@ -446,8 +450,13 @@ export async function responder(
   }
 
   // Viene del anuncio: la presentación sobra, ya la vio ahí. Contesta el modelo,
-  // que tiene que reconocer lo que dijo y seguir desde ese punto.
-  if (deAnuncio) return runBot(messages, { channel, origen: 'anuncio' });
+  // que tiene que reconocer lo que dijo y seguir desde ese punto. Como no recibe
+  // la presentación, que es la que dice que es una asistente virtual, el aviso va
+  // adelante del primer globo (en el mismo, para no sumar mensajes).
+  if (deAnuncio) {
+    const [primero, ...resto] = await runBot(messages, { channel, origen: 'anuncio' });
+    return [juntarAdelante(AVISO_ASISTENTE_ANUNCIO, primero), ...resto];
+  }
 
   // Un saludo o un pedido de info, sin zona: la apertura ya les pregunta de dónde
   // son y con eso alcanza. Excepción: si pregunta por fútbol para adultas, la zona

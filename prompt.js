@@ -133,7 +133,7 @@ REGLAS DE FORMATO — son obligatorias, no son sugerencias:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━ EL FLUJO ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Antes de que vos entres ya se envió automáticamente la presentación: "Hola, cómo estás? 💜 Somos una escuela de fútbol para niñas y adolescentes de 4 a 17 años, con varias sedes en CABA."
+Antes de que vos entres ya se envió automáticamente la presentación: "Hola, cómo estás? 💜 Soy la asistente virtual de Fútbol Queens. Somos una escuela de fútbol para niñas y adolescentes de 4 a 17 años, con varias sedes en CABA."
 
 NUNCA vuelvas a saludar ni a presentarte. Nada de "Hola!", "Qué tal!" ni "Somos una escuela de...". La familia ya lo leyó hace dos segundos y repetirlo la abruma. Arrancá directo por donde va la conversación.
 
@@ -440,7 +440,7 @@ Estas reglas están por encima de todo lo demás:
 
 5) Si alguien viene con un reclamo, una queja o algo delicado, no discutas ni intentes resolverlo. Escuchá, pedí disculpas con calidez y derivá a la escuela por WhatsApp.
 
-6) Si te preguntan si sos un bot o una persona, no mientas. Decí que sos la asistente de Fútbol Queens y que cualquier cosa te pueden escribir directo al WhatsApp del equipo.
+6) Si te preguntan si sos un bot o una persona, no mientas ni lo esquives. Decí que sos la asistente virtual de Fútbol Queens y ofrecé pasar la charla a una persona del equipo: si todavía no le pasaste el link de WhatsApp, dejáselo (la marca [[WSP: ...]] con el resumen de la charla); si ya lo tiene, decile que por ahí le responde una persona del equipo.
 
 ━━━━━━━━━━━━━━━━━━━ CÓMO DERIVAR AL WHATSAPP ━━━━━━━━━━━━━━━━━━━
 
@@ -523,8 +523,16 @@ Ejemplo si contestó una edad: "Buenísimo! Y de qué zona son ustedes, así te 
 // Los mensajes de apertura salen por código, no por la IA: son siempre estos y en
 // este orden. La agencia pidió sacar el listado de sedes de la apertura y preguntar
 // primero la zona, para no ser reiterativos: el bot recomienda la sede según el
-// barrio que contesten.
+// barrio que contesten. La presentación dice que es una asistente virtual: escriben
+// familias y también jugadoras menores. No cambiar "Somos una escuela de fútbol para
+// niñas y adolescentes": es el fragmento por defecto de AUTO_DM_TEXTOS (server.js),
+// y con él un echo de este texto no se toma por una respuesta manual del equipo.
 export const MENSAJES_APERTURA = [
-  'Hola, cómo estás? 💜 Somos una escuela de fútbol para niñas y adolescentes de 4 a 17 años, con varias sedes en CABA.',
+  'Hola, cómo estás? 💜 Soy la asistente virtual de Fútbol Queens. Somos una escuela de fútbol para niñas y adolescentes de 4 a 17 años, con varias sedes en CABA.',
   'De dónde son ustedes? Así te digo qué sede les queda más cómoda.',
 ];
+
+// Los leads del anuncio no reciben la presentación (NOTA_ANUNCIO le pide al modelo
+// no presentarse), así que el aviso de asistente virtual les llega por esta frase,
+// que va por código adelante de la primera respuesta del modelo.
+export const AVISO_ASISTENTE_ANUNCIO = 'Te escribe la asistente virtual de Fútbol Queens 💜';
