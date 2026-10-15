@@ -64,8 +64,32 @@ export class GloboLink {
     this.extra = limpio.replace(WSP_MARCA_RE, '').trim();
   }
 
+  // El mismo globo con `texto` adelante o atrás, en el mismo mensaje. No vuelven a
+  // armar el link: con PUBLIC_BASE_URL eso guardaría otro resumen con otro id.
+  conTextoAdelante(texto) {
+    return copiaGloboLink(this, `${texto}\n${this.texto}`, [texto, this.extra]);
+  }
+
+  conTextoAtras(texto) {
+    return copiaGloboLink(this, `${this.texto}\n${texto}`, [this.extra, texto]);
+  }
+
   toString() { return this.texto; }
   toJSON() { return this.texto; }
+}
+
+function copiaGloboLink(globo, texto, extras) {
+  return Object.assign(Object.create(GloboLink.prototype), {
+    resumen: globo.resumen,
+    link: globo.link,
+    texto,
+    extra: extras.filter(Boolean).join('\n'),
+  });
+}
+
+// Junta texto al final de un globo, sea texto suelto o el del link.
+function juntarAtras(globo, texto) {
+  return globo instanceof GloboLink ? globo.conTextoAtras(texto) : `${globo}\n${texto}`;
 }
 
 export function insertarLinkWsp(texto) {
@@ -383,6 +407,30 @@ export function esRespuestaDeAnuncio(texto) {
   return edad !== undefined;
 }
 
+// ─── Saludo o pedido de info ─────────────────────────────────────────────────
+// La apertura fija sale sin que el modelo lea el mensaje, así que "queremos
+// arrancar en enero" recibía la presentación y "De dónde son?" y la pregunta
+// quedaba sin contestar (eval O1-O3, 15/10/2026). Ahora la apertura fija queda
+// solo para un saludo o un pedido de info genérico; todo lo demás pasa por el
+// modelo. Es una lista de lo que SÍ es saludo, y no al revés: "queremos arrancar
+// en enero" no trae "?" ni palabras de pregunta, y detectar preguntas no alcanza.
+
+const RELLENO = /\b(hola+|holis|buenas( tardes| noches)?|buen(os)? dias?|que tal|como (estas|estan|va|andan)|todo bien|porfa(vor)?|por favor|gracias|desde ya)\b/g;
+const PIDE_INFO = /\b(info|informacion|me interesa|nos interesa)\b/;
+// Un pedido de info que además trae algo concreto ya no es genérico.
+const ALGO_CONCRETO = new RegExp(`\\b(${[
+  'cuant[oa]s?', 'cuando', 'donde', 'horarios?', 'precios?', 'sale', 'cuesta', 'valor', 'se puede', 'hay',
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'setiembre',
+  'octubre', 'noviembre', 'diciembre', 'verano', 'vacaciones', 'arrancar', 'empezar', 'inscrib\\w*',
+].join('|')})\\b`);
+
+export function esSaludoOInfo(texto) {
+  const t = sinAcentos(texto).replace(/[^a-z0-9 ]/g, ' ');
+  const resto = t.replace(RELLENO, ' ').replace(/\s+/g, ' ').trim();
+  if (!resto) return true;
+  return PIDE_INFO.test(resto) && !ALGO_CONCRETO.test(resto);
+}
+
 // `clasificacion` es la etiqueta del triage (server.js la calcula para Instagram;
 // el widget web no la manda). Solo cambia algo cuando es ADULTA.
 export async function responder(
@@ -401,24 +449,43 @@ export async function responder(
   // que tiene que reconocer lo que dijo y seguir desde ese punto.
   if (deAnuncio) return runBot(messages, { channel, origen: 'anuncio' });
 
-  // Todavía no sabemos de dónde son: la apertura ya se los pregunta y con eso alcanza.
-  // Excepción: si pregunta por fútbol para adultas, la zona no importa. Antes esa
-  // consulta recibía la apertura y nunca llegaba al modelo, que es el que sabe
-  // derivarla a De Taquito Femenino o La Sede Colegiales.
-  if (clasificacion !== TRIAGE.ADULTA && !mencionaZona(primerMensaje)) return [...MENSAJES_APERTURA];
+  // Un saludo o un pedido de info, sin zona: la apertura ya les pregunta de dónde
+  // son y con eso alcanza. Excepción: si pregunta por fútbol para adultas, la zona
+  // no importa. Antes esa consulta recibía la apertura y nunca llegaba al modelo,
+  // que es el que sabe derivarla a De Taquito Femenino o La Sede Colegiales.
+  if (clasificacion !== TRIAGE.ADULTA && !mencionaZona(primerMensaje) && esSaludoOInfo(primerMensaje)) {
+    return [...MENSAJES_APERTURA];
+  }
 
-  // Ya nos dijeron la zona (o es una adulta): sacamos la pregunta de la apertura,
-  // dejamos la presentación y que siga el modelo. Le recortamos un globo para no abrumar.
+  // Ya nos dijeron la zona, es una adulta o trae una pregunta concreta: sacamos la
+  // pregunta de la apertura, dejamos la presentación y que siga el modelo (si no
+  // sabe la zona, la pregunta él). Le recortamos un globo para no abrumar.
   const respuesta = await runBot(messages, { channel });
-  return [MENSAJES_APERTURA[0], ...recortarSinPerderLink(respuesta)];
+  return [
+    MENSAJES_APERTURA[0],
+    ...recortarSinPerderLink(respuesta, { conservarPregunta: !mencionaZona(primerMensaje) }),
+  ];
 }
 
 // El recorte de la primera respuesta se llevaba el globo del link cuando quedaba
 // tercero: el bot decía "te dejo el link" y el link no llegaba (2/10/2026). Si
-// quedó afuera, va al final: la derivación no se pierde por ahorrar un globo.
-export function recortarSinPerderLink(respuesta) {
+// quedó afuera, se junta con el último globo del recorte: agregarlo al final
+// sumaba un globo de más y, con la presentación adelante, salían 4; reemplazar
+// el último se llevaba el horario (eval A4, 15/10/2026).
+//
+// conservarPregunta: sin zona, el modelo cierra preguntando de dónde son, y si ese
+// globo quedaba tercero el recorte se lo llevaba y la charla quedaba sin pregunta
+// (eval O1 y O2, 15/10/2026). Si el último globo es una pregunta, se junta igual.
+export function recortarSinPerderLink(respuesta, { conservarPregunta = false } = {}) {
   const recortada = respuesta.slice(0, Math.max(1, MAX_GLOBOS - 1));
+  const ultimo = recortada.length - 1;
   const link = respuesta.find((g) => g instanceof GloboLink);
-  if (link && !recortada.includes(link)) recortada.push(link);
+  const linkAfuera = link && !recortada.includes(link);
+  const pregunta = respuesta.at(-1);
+  const preguntaAfuera = conservarPregunta && !recortada.includes(pregunta)
+    && !(pregunta instanceof GloboLink) && String(pregunta).trim().endsWith('?');
+
+  if (preguntaAfuera) recortada[ultimo] = juntarAtras(recortada[ultimo], pregunta);
+  if (linkAfuera) recortada[ultimo] = link.conTextoAdelante(String(recortada[ultimo]));
   return recortada;
 }
