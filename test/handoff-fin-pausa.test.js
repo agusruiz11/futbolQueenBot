@@ -93,7 +93,7 @@ test('al vencer la pausa, retoma con el historial de Instagram', async (t) => {
   srv.kill('SIGUSR2');
   await esperar(() => log.includes('reloj +3h'));
   await deFamilia('hola? sigue la info?', 'm-f2');
-  await esperar(() => log.includes(`Fin de la pausa para ${FAM}: retomo con el historial de Instagram`));
+  await esperar(() => log.includes(`[historial] ${FAM}: retomo con`));
   await esperar(() => pedidosModelo.length > 0);
 
   const msgs = pedidosModelo.at(-1).messages;
