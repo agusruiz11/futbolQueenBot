@@ -14,7 +14,9 @@ cp .env.example .env     # completá ANTHROPIC_API_KEY
 npm run dev
 ```
 
-Abrí http://localhost:3000 para probarlo en un chat de prueba.
+Abrí http://localhost:3000 para probarlo en un chat de prueba. En Railway el chat de
+prueba y `POST /chat` están apagados (contestan sin clave y gastan tokens): solo
+queda `/privacy.html`. `WIDGET_WEB=true` o `false` lo fuerza en cualquier entorno.
 
 ## Estructura
 
@@ -32,7 +34,7 @@ Si un dato no está ahí, el bot no lo sabe y tiene que derivar al WhatsApp.
 
 ## Endpoints
 
-**`POST /chat`** — widget web
+**`POST /chat`** — widget web (solo fuera de Railway, ver `WIDGET_WEB`)
 
 ```json
 { "messages": [{ "role": "user", "content": "hola" }] }

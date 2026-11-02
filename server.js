@@ -24,7 +24,23 @@ app.use((req, res, next) => {
 
 // Guardamos el body crudo para validar la firma de los webhooks de Meta
 app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
-app.use(express.static('public'));
+
+// ─── Chat de prueba (widget web) ─────────────────────────────────────────────
+// La página de prueba (public/index.html) y POST /chat contestan sin ninguna
+// clave y cada mensaje se cobra en la key de Anthropic del bot. En producción
+// nadie los usa (el bot atiende solo Instagram) y en oct 2026 los abrió gente
+// de afuera, así que en Railway quedan apagados: solo se sirve privacy.html,
+// que es la política de privacidad cargada en la app de Meta.
+// WIDGET_WEB=true o false lo fuerza en cualquier entorno.
+const WIDGET_ACTIVO = process.env.WIDGET_WEB
+  ? process.env.WIDGET_WEB === 'true'
+  : !process.env.RAILWAY_ENVIRONMENT;
+
+if (WIDGET_ACTIVO) {
+  app.use(express.static('public'));
+} else {
+  app.get('/privacy.html', (_req, res) => res.sendFile('privacy.html', { root: 'public' }));
+}
 
 // ─── Short link de derivación al WhatsApp ────────────────────────────────────
 // El bot manda /w/xxxxxxx en vez de la URL de WhatsApp con el resumen encodeado.
@@ -53,7 +69,7 @@ app.get('/w/:id', (req, res) => {
 
 // ─── Chat endpoint (widget web) ──────────────────────────────────────────────
 
-app.post('/chat', async (req, res) => {
+const chatWeb = async (req, res) => {
   const { messages } = req.body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -84,7 +100,9 @@ app.post('/chat', async (req, res) => {
     console.error('Error en /chat:', err.message);
     if (!res.headersSent) res.status(500).json({ error: 'Error interno del servidor.' });
   }
-});
+};
+
+if (WIDGET_ACTIVO) app.post('/chat', chatWeb);
 
 // ─── Instagram: memoria de conversaciones (por usuario) ──────────────────────
 // En memoria: simple y suficiente para empezar. Se reinicia si Railway redeploya.
@@ -746,6 +764,9 @@ app.listen(PORT, () => {
   console.log(`[wsp] Link de derivación: ${process.env.PUBLIC_BASE_URL
     ? `corto (${process.env.PUBLIC_BASE_URL.replace(/\/+$/, '')}/w/...)`
     : 'LARGO — definí PUBLIC_BASE_URL para acortarlo'}`);
+  console.log(`[widget] Chat de prueba y POST /chat: ${WIDGET_ACTIVO
+    ? 'ACTIVOS'
+    : 'APAGADOS (producción; WIDGET_WEB=true los prende)'}`);
   console.log(`[avisos] Slack: ${conSlack ? 'activos' : 'APAGADOS (falta SLACK_WEBHOOK_URL), solo quedan en el log'}`);
   // Refresca el token si toca y revisa cuánto le queda: a los 30 s y una vez por día.
   igToken.iniciar();
