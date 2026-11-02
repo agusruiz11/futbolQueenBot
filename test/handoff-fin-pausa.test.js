@@ -11,7 +11,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 4000 + Math.floor(Math.random() * 90);
+// 4400-4489: el rango anterior (4000-4089) incluía el 4045, que fetch rechaza.
+const PORT = 4400 + Math.floor(Math.random() * 90);
 const FAM = 'fam-1';
 const RESPUESTA_EQUIPO = 'Hola! Te paso la info de la sede de Núñez: martes y jueves 18 hs';
 
